@@ -1,0 +1,750 @@
+{
+  "2209.15397v2": {
+    "note": "Gold for anchor rule (PLAN_M2 P8). Built 2026-11-16 from an independent blind annotation (gold/gold_blind.json, method gold/BLIND_METHOD.md: page_texts line geometry, second extractor poppler pdftotext -bbox) and the prototype draft (plan_probes/gold_draft.json, anchor4.mts), then adjudicated (gold/ADJUDICATION.md). Positions: all 18 sections and 15 equations have the same page+start in both tables; 0 entries differ only in the equation-group htmlId convention and take the group table id (provenance adjudicated:draft). Coordinates: extractPageTexts (pdfjs-dist 6.5.438), page 1-based, start = UTF-16 offset in page_texts.text of the section title's first char after the number prefix / of \"(\" of the equation's own tag. Fixtures: 2209.15397v2.pdf sha256 434cea904a43ace76b597fd2705d1ef4f3fa925d8fa7fe6e98e06316b6bb84e5, 2209.15397v2.html sha256 2d6bd05dc6aa959100f5f8f5990fa4a7a332cd60fe74a5cc0391470fd9b09bd3. Repository copy (BRIEF_S S7): the section `title` field (paper heading text) is left out; every other field and value is unchanged.",
+    "sections": [
+      {
+        "htmlId": "S1",
+        "number": "I",
+        "page": 1,
+        "start": 2409,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S2",
+        "number": "II",
+        "page": 2,
+        "start": 3092,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3",
+        "number": "III",
+        "page": 3,
+        "start": 1273,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3.SS1",
+        "number": "III-A",
+        "page": 3,
+        "start": 2497,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3.SS2",
+        "number": "III-B",
+        "page": 4,
+        "start": 312,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3.SS3",
+        "number": "III-C",
+        "page": 4,
+        "start": 2444,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3.SS4",
+        "number": "III-D",
+        "page": 4,
+        "start": 3897,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3.SS5",
+        "number": "III-E",
+        "page": 5,
+        "start": 1206,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3.SS6",
+        "number": "III-F",
+        "page": 5,
+        "start": 4385,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4",
+        "number": "IV",
+        "page": 6,
+        "start": 372,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS1",
+        "number": "IV-A",
+        "page": 6,
+        "start": 969,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS2",
+        "number": "IV-B",
+        "page": 6,
+        "start": 1938,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS3",
+        "number": "IV-C",
+        "page": 6,
+        "start": 3698,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS4",
+        "number": "IV-D",
+        "page": 7,
+        "start": 1366,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS4.SSS1",
+        "number": "IV-D1",
+        "page": 7,
+        "start": 1712,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS4.SSS2",
+        "number": "IV-D2",
+        "page": 7,
+        "start": 4195,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5",
+        "number": "V",
+        "page": 7,
+        "start": 5496,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6",
+        "number": "VI",
+        "page": 8,
+        "start": 1461,
+        "provenance": "agree"
+      }
+    ],
+    "equations": [
+      {
+        "number": "1",
+        "htmlId": "S3.E1",
+        "group": false,
+        "page": 3,
+        "start": 4779,
+        "provenance": "agree"
+      },
+      {
+        "number": "2",
+        "htmlId": "S3.E2",
+        "group": false,
+        "page": 3,
+        "start": 4859,
+        "provenance": "agree"
+      },
+      {
+        "number": "3",
+        "htmlId": "S3.E3",
+        "group": false,
+        "page": 3,
+        "start": 4890,
+        "provenance": "agree"
+      },
+      {
+        "number": "4",
+        "htmlId": "S3.E4",
+        "group": false,
+        "page": 3,
+        "start": 5770,
+        "provenance": "agree"
+      },
+      {
+        "number": "5",
+        "htmlId": "S3.E5",
+        "group": false,
+        "page": 4,
+        "start": 5557,
+        "provenance": "agree"
+      },
+      {
+        "number": "6",
+        "htmlId": "S3.E6",
+        "group": false,
+        "page": 4,
+        "start": 5730,
+        "provenance": "agree"
+      },
+      {
+        "number": "7",
+        "htmlId": "S3.E7",
+        "group": false,
+        "page": 4,
+        "start": 5754,
+        "provenance": "agree"
+      },
+      {
+        "number": "8",
+        "htmlId": "S3.E8",
+        "group": false,
+        "page": 4,
+        "start": 6022,
+        "provenance": "agree"
+      },
+      {
+        "number": "9",
+        "htmlId": "S3.E9",
+        "group": false,
+        "page": 5,
+        "start": 785,
+        "provenance": "agree"
+      },
+      {
+        "number": "10",
+        "htmlId": "S3.E10",
+        "group": false,
+        "page": 5,
+        "start": 880,
+        "provenance": "agree"
+      },
+      {
+        "number": "11",
+        "htmlId": "S3.E11",
+        "group": false,
+        "page": 5,
+        "start": 2098,
+        "provenance": "agree"
+      },
+      {
+        "number": "12",
+        "htmlId": "S3.E12",
+        "group": false,
+        "page": 5,
+        "start": 2547,
+        "provenance": "agree"
+      },
+      {
+        "number": "13",
+        "htmlId": "S3.E13",
+        "group": false,
+        "page": 5,
+        "start": 2790,
+        "provenance": "agree"
+      },
+      {
+        "number": "14",
+        "htmlId": "S3.E14",
+        "group": false,
+        "page": 5,
+        "start": 3146,
+        "provenance": "agree"
+      },
+      {
+        "number": "15",
+        "htmlId": "S3.E15",
+        "group": false,
+        "page": 5,
+        "start": 3785,
+        "provenance": "agree"
+      }
+    ]
+  },
+  "2107.06829v1": {
+    "note": "Gold for anchor rule (PLAN_M2 P8). Built 2026-11-16 from an independent blind annotation (gold/gold_blind.json, method gold/BLIND_METHOD.md: page_texts line geometry, second extractor poppler pdftotext -bbox) and the prototype draft (plan_probes/gold_draft.json, anchor4.mts), then adjudicated (gold/ADJUDICATION.md). Positions: all 48 sections and 19 equations have the same page+start in both tables; 5 entries differ only in the equation-group htmlId convention and take the group table id (provenance adjudicated:draft). Coordinates: extractPageTexts (pdfjs-dist 6.5.438), page 1-based, start = UTF-16 offset in page_texts.text of the section title's first char after the number prefix / of \"(\" of the equation's own tag. Fixtures: 2107.06829v1.pdf sha256 ba5072e06e75dec5222bcb528143f3aa3238d6f6692bac1e22a9fe1bc55a15dd, 2107.06829v1.html sha256 44b11ceb70544a55a7f0c79053953d0d7390d8eb289a2067e3828cec433f0f6f. Repository copy (BRIEF_S S7): the section `title` field (paper heading text) is left out; every other field and value is unchanged.",
+    "sections": [
+      {
+        "htmlId": "S1",
+        "number": "I",
+        "page": 1,
+        "start": 2027,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S2",
+        "number": "II",
+        "page": 2,
+        "start": 3295,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S2.SS1",
+        "number": "II-A",
+        "page": 2,
+        "start": 3312,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S2.SS2",
+        "number": "II-B",
+        "page": 3,
+        "start": 2917,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S3",
+        "number": "III",
+        "page": 4,
+        "start": 1553,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4",
+        "number": "IV",
+        "page": 4,
+        "start": 2718,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS1",
+        "number": "IV-A",
+        "page": 4,
+        "start": 3048,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS1.SSS1",
+        "number": "IV-A1",
+        "page": 4,
+        "start": 3168,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS1.SSS2",
+        "number": "IV-A2",
+        "page": 5,
+        "start": 87,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS2",
+        "number": "IV-B",
+        "page": 5,
+        "start": 1841,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS2.SSS1",
+        "number": "IV-B1",
+        "page": 5,
+        "start": 2508,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS2.SSS2",
+        "number": "IV-B2",
+        "page": 5,
+        "start": 3354,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S4.SS2.SSS3",
+        "number": "IV-B3",
+        "page": 5,
+        "start": 4457,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5",
+        "number": "V",
+        "page": 6,
+        "start": 1753,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS1",
+        "number": "V-A",
+        "page": 6,
+        "start": 2023,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS2",
+        "number": "V-B",
+        "page": 7,
+        "start": 5,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS2.SSS1",
+        "number": "V-B1",
+        "page": 7,
+        "start": 40,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS2.SSS2",
+        "number": "V-B2",
+        "page": 7,
+        "start": 1944,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS3",
+        "number": "V-C",
+        "page": 7,
+        "start": 2320,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS3.SSS1",
+        "number": "V-C1",
+        "page": 7,
+        "start": 3583,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS3.SSS2",
+        "number": "V-C2",
+        "page": 7,
+        "start": 5340,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS3.SSS3",
+        "number": "V-C3",
+        "page": 8,
+        "start": 2038,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS4",
+        "number": "V-D",
+        "page": 8,
+        "start": 3081,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS4.SSS1",
+        "number": "V-D1",
+        "page": 8,
+        "start": 3261,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS4.SSS2",
+        "number": "V-D2",
+        "page": 9,
+        "start": 251,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS5",
+        "number": "V-E",
+        "page": 9,
+        "start": 3926,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS6",
+        "number": "V-F",
+        "page": 10,
+        "start": 262,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS6.SSS1",
+        "number": "V-F1",
+        "page": 10,
+        "start": 554,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS6.SSS2",
+        "number": "V-F2",
+        "page": 10,
+        "start": 2924,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S5.SS6.SSS3",
+        "number": "V-F3",
+        "page": 10,
+        "start": 3840,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6",
+        "number": "VI",
+        "page": 10,
+        "start": 4319,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS1",
+        "number": "VI-A",
+        "page": 11,
+        "start": 1511,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS2",
+        "number": "VI-B",
+        "page": 11,
+        "start": 2730,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS2.SSS1",
+        "number": "VI-B1",
+        "page": 11,
+        "start": 2759,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS2.SSS2",
+        "number": "VI-B2",
+        "page": 11,
+        "start": 4908,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS3",
+        "number": "VI-C",
+        "page": 12,
+        "start": 4305,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS3.SSS1",
+        "number": "VI-C1",
+        "page": 13,
+        "start": 1958,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS3.SSS2",
+        "number": "VI-C2",
+        "page": 13,
+        "start": 3872,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S6.SS4",
+        "number": "VI-D",
+        "page": 13,
+        "start": 4975,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7",
+        "number": "VII",
+        "page": 14,
+        "start": 2244,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7.SS1",
+        "number": "VII-A",
+        "page": 14,
+        "start": 2270,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7.SS2",
+        "number": "VII-B",
+        "page": 14,
+        "start": 4039,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7.SS2.SSS1",
+        "number": "VII-B1",
+        "page": 14,
+        "start": 4058,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7.SS2.SSS2",
+        "number": "VII-B2",
+        "page": 16,
+        "start": 1638,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7.SS2.SSS3",
+        "number": "VII-B3",
+        "page": 16,
+        "start": 3552,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S7.SS3",
+        "number": "VII-C",
+        "page": 17,
+        "start": 861,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "S8",
+        "number": "VIII",
+        "page": 17,
+        "start": 2371,
+        "provenance": "agree"
+      },
+      {
+        "htmlId": "Sx1",
+        "number": "",
+        "page": 17,
+        "start": 3455,
+        "provenance": "agree"
+      }
+    ],
+    "equations": [
+      {
+        "number": "1",
+        "htmlId": "S4.E1",
+        "group": false,
+        "page": 4,
+        "start": 3497,
+        "provenance": "agree"
+      },
+      {
+        "number": "2",
+        "htmlId": "S4.E2",
+        "group": true,
+        "page": 4,
+        "start": 4080,
+        "provenance": "adjudicated:draft"
+      },
+      {
+        "number": "3",
+        "htmlId": "S4.E3",
+        "group": false,
+        "page": 5,
+        "start": 1166,
+        "provenance": "agree"
+      },
+      {
+        "number": "4",
+        "htmlId": "S4.E4",
+        "group": false,
+        "page": 5,
+        "start": 1409,
+        "provenance": "agree"
+      },
+      {
+        "number": "5",
+        "htmlId": "S4.E5",
+        "group": false,
+        "page": 5,
+        "start": 1766,
+        "provenance": "agree"
+      },
+      {
+        "number": "6",
+        "htmlId": "S4.E6",
+        "group": true,
+        "page": 5,
+        "start": 2935,
+        "provenance": "adjudicated:draft"
+      },
+      {
+        "number": "7",
+        "htmlId": "S4.E7",
+        "group": false,
+        "page": 5,
+        "start": 3191,
+        "provenance": "agree"
+      },
+      {
+        "number": "8",
+        "htmlId": "S4.E8",
+        "group": false,
+        "page": 5,
+        "start": 4132,
+        "provenance": "agree"
+      },
+      {
+        "number": "9",
+        "htmlId": "S4.E9",
+        "group": false,
+        "page": 5,
+        "start": 4450,
+        "provenance": "agree"
+      },
+      {
+        "number": "10",
+        "htmlId": "S4.E10",
+        "group": true,
+        "page": 5,
+        "start": 4748,
+        "provenance": "adjudicated:draft"
+      },
+      {
+        "number": "11",
+        "htmlId": "S4.E11",
+        "group": false,
+        "page": 6,
+        "start": 122,
+        "provenance": "agree"
+      },
+      {
+        "number": "12",
+        "htmlId": "S4.E12",
+        "group": false,
+        "page": 6,
+        "start": 481,
+        "provenance": "agree"
+      },
+      {
+        "number": "13",
+        "htmlId": "S4.E13",
+        "group": false,
+        "page": 6,
+        "start": 760,
+        "provenance": "agree"
+      },
+      {
+        "number": "14",
+        "htmlId": "S4.E14",
+        "group": false,
+        "page": 6,
+        "start": 1094,
+        "provenance": "agree"
+      },
+      {
+        "number": "15",
+        "htmlId": "S4.E15",
+        "group": false,
+        "page": 6,
+        "start": 1426,
+        "provenance": "agree"
+      },
+      {
+        "number": "16",
+        "htmlId": "S4.E16",
+        "group": false,
+        "page": 6,
+        "start": 1590,
+        "provenance": "agree"
+      },
+      {
+        "number": "17",
+        "htmlId": "S5.E17",
+        "group": true,
+        "page": 8,
+        "start": 3595,
+        "provenance": "adjudicated:draft"
+      },
+      {
+        "number": "18",
+        "htmlId": "S5.E18",
+        "group": true,
+        "page": 8,
+        "start": 3745,
+        "provenance": "adjudicated:draft"
+      },
+      {
+        "number": "19",
+        "htmlId": "S5.E19",
+        "group": false,
+        "page": 10,
+        "start": 1234,
+        "provenance": "agree"
+      }
+    ]
+  }
+}

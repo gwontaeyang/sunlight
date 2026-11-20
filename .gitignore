@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.tsbuildinfo
+test-results/
+playwright-report/
+.vite/
+coverage/
+apps/web/public/pdfjs/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.env*
+.sunlight-dev/
+anthropic.json
+.anthropic-*.tmp
+study_paper-secrets/

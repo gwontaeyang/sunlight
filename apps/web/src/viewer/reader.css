@@ -1,0 +1,107 @@
+/* Reader overlays (owner C). Positions are percentages of the page box, so they stay aligned at every zoom. */
+
+/* Highlight layer created by the vendored highlighter inside each pdf.js text layer. */
+.textLayer > .PdfHighlighter__highlight-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.sp-hl {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sp-hl-part {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  mix-blend-mode: multiply;
+  border-radius: 1px;
+}
+
+/* Citation / anchor flash: a direct child of the .page element (outside the text layer). */
+.page > .sp-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.sp-flash-part {
+  position: absolute;
+  background: rgba(255, 80, 0, 0.35);
+  outline: 2px solid rgba(255, 80, 0, 0.9);
+  mix-blend-mode: multiply;
+  animation: sp-flash 2s ease-out forwards;
+}
+@keyframes sp-flash {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* M2: stored area highlight (Ctrl+drag → 영역 하이라이트): a filled box with an outline in the highlight color. */
+.sp-hl-part.sp-hl-area {
+  outline: 2px solid;
+  outline-offset: -2px;
+  border-radius: 0;
+}
+
+/* M3a (concept_CD): the warm canvas around the pages instead of the highlighter's #333. */
+.sl-reader .PdfHighlighter {
+  background-color: var(--color-sl-canvas);
+  scrollbar-color: var(--color-sl-edge) transparent;
+}
+/* Scroll past the end: the last page can be scrolled up to the top of the viewer (its last lines read at eye level,
+   room under a selection there), however small the page is at "폭 맞춤" between the rails, outline and panel. */
+.sl-reader .pdfViewer {
+  --pdfViewer-padding-bottom: max(0px, calc(100vh - var(--spacing-sl-bar) - 96px));
+}
+
+/* Night (theme dark + tone night): the page bitmap is dimmed with --sl-pdf-night; the text layer above it keeps its
+   geometry (only the colours change). The highlight / selection / flash colours are lightened onto the dark page
+   (screen) instead of darkened (multiply). Tone 'original' (원본 색 보기) drops the filter: the page, figures included,
+   shows its own colours while the reader chrome stays dark. */
+:root[data-theme='dark'] .sl-reader[data-paper-tone='night'] .pdfViewer .page {
+  background-color: #1c1a17;
+}
+:root[data-theme='dark'] .sl-reader[data-paper-tone='night'] .pdfViewer .page .canvasWrapper {
+  filter: var(--sl-pdf-night);
+}
+:root[data-theme='dark'] .sl-reader[data-paper-tone='night'] .pdfViewer .textLayer,
+:root[data-theme='dark'] .sl-reader[data-paper-tone='night'] .sp-hl-part,
+:root[data-theme='dark'] .sl-reader[data-paper-tone='night'] .sp-flash-part {
+  mix-blend-mode: screen;
+}
+
+/* Numbers match the 1–5 keyboard shortcuts. The selected colour also has a second ring. */
+.sl-swatch {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--color-sl-edge);
+  border-radius: 50%;
+  color: #211e1a; /* The five stored PDF swatches keep their original pigment in both themes. */
+  font-size: var(--text-sl-label);
+  line-height: 1;
+  font-weight: 650;
+}
+.sl-swatch:disabled {
+  color: #211e1a;
+}
+.sl-swatch[aria-pressed='true'] {
+  outline: 2px solid var(--color-sl-ink);
+  outline-offset: 1px;
+}
+.sl-swatch:focus-visible {
+  outline: 2px dashed var(--color-sl-accent);
+  outline-offset: 2px;
+}
+.sl-reader .MouseSelection {
+  border: 2px dashed var(--color-sl-accent);
+  background: var(--color-sl-selection);
+  mix-blend-mode: normal;
+}

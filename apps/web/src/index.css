@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+@import './ui/tokens.css';
+
+@layer base {
+  /* Tailwind v4 draws a bare `border` in currentColor (the black 1 px lines of the M2 screens): a divider here. */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-sl-line, currentColor);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-sl-ui);
+    background: var(--color-sl-surface);
+    color: var(--color-sl-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::placeholder {
+    color: var(--color-sl-meta);
+    opacity: 1;
+  }
+  :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-sl-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Outlined inputs and buttons need a stronger edge than decorative panel dividers. */
+:where(button, input, textarea, select).border:where(.border-gray-300, .border-slate-300, .border-red-300),
+:where(button, input, textarea, select)[class~='border']:not([class*='border-']) {
+  border-color: var(--color-sl-edge);
+}
+
+/* Keep unavailable controls legible while their native disabled state blocks input. */
+:where(#root) :is(button, input, textarea, select):disabled {
+  opacity: 1;
+  color: var(--color-sl-meta);
+  background-color: var(--color-sl-subtle);
+  border-style: dashed;
+  cursor: not-allowed;
+}

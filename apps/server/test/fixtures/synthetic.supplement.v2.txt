@@ -1,0 +1,32 @@
+<paper_index v="2">
+<metadata>
+title: M2 Seed: Structured Synthetic Paper
+authors: Test Author
+arxiv: 2301.00004v1
+year: 2023
+category: cs.RO
+</metadata>
+<sections>
+S1 | I | Introduction
+S2 | II | Method
+S2.SS1 | II-A | Robust Kernel
+S2.SS2 | II-B | Implementation Details
+</sections>
+<equations>
+(1) | I | r_{i}=R\,p_{i}+t-q_{i}
+(2) | II-A | T_{k}=T_{k-1}\,\Delta T_{k}
+(3) | II-B | \begin{gathered} \boldsymbol{v}_{k}=\boldsymbol{v}_{k-1}+a_{k}\,\Delta t \\ \mathrm{R}_{k}=\mathrm{R}_{k-1}\,\exp(\omega_{k}\,\Delta t) \end{gathered}
+(4) | II-B | \undefinedmacro{x}+\undefinedmacrotwo{y}
+(A.1) | II-B | q_{k}=q_{k-1}\otimes\delta q
+(A.1) | II-B | p_{k}=p_{k-1}+v\,\Delta t
+</equations>
+<figures>
+Figure 1 | Overview of the synthetic registration pipeline.
+Table 1 | Measured runtime on the synthetic sequence.
+</figures>
+<references>
+[1] A. Placeholder, “A synthetic reference,” Synthetic Journal, 2000.
+[2] B. Placeholder, “A synthetic paper with internal links,” arXiv:2301.00003, 2023.
+[3] C. Placeholder, “A synthetic paper that is not in the library,” arXiv:2301.00099, 2023.
+</references>
+</paper_index>

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "about": "Model-output examples per task: parser tests = MockLlm responses = UI test inputs (PLAN 2.1). Quotes refer to apps/server/test/fixtures/synthetic.pdf and have the same status and page in synthetic-m2.pdf (syntheticFixtures.test). Owner: supervisor (B proposes changes).",
+  "tasks": {
+    "explain_selection": { "file": "explain_selection.md", "format": "sp-markup", "expect": { "quotes": { "verbatim": 2, "ambiguous": 0, "notFound": 0 }, "eqRefs": 1, "labels": ["P", "P", "P", "G"], "glossary": 1, "issues": 0 } },
+    "chat": { "file": "chat.md", "format": "sp-markup", "expect": { "quotes": { "verbatim": 2, "ambiguous": 1, "notFound": 1 }, "eqRefs": 0, "labels": ["P", "N", "P", "P", "N"], "glossary": 0, "issues": 0 } },
+    "translate_selection": { "file": "translate_selection.md", "format": "markdown", "expect": { "quotes": { "verbatim": 0, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
+    "figure_area": { "file": "figure_area.md", "format": "sp-markup", "expect": { "quotes": { "verbatim": 1, "ambiguous": 0, "notFound": 0 }, "eqRefs": 1, "issues": 0 } },
+    "summary": { "file": "summary.md", "format": "sp-markup", "expect": { "quotes": { "verbatim": 2, "ambiguous": 0, "notFound": 0 }, "eqRefs": 2, "issues": 0 } },
+    "equation_deep": { "file": "equation_deep.md", "format": "sp-markup", "expect": { "quotes": { "verbatim": 1, "ambiguous": 0, "notFound": 0 }, "eqRefs": 3, "issues": 0 } },
+    "notation_card": { "file": "notation_card.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 4, "ambiguous": 0, "notFound": 0 }, "eqRefs": 3, "issues": 0 } },
+    "assumptions_card": { "file": "assumptions_card.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 2, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
+    "glossary_define": { "file": "glossary_define.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 1, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
+    "cards_from_highlights": { "file": "cards_from_highlights.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 2, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
+    "explain_back_grade": { "file": "explain_back_grade.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 3, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
+    "pdf_metadata": { "file": "pdf_metadata.json", "format": "json-schema", "expect": null }
+  },
+  "adversarial": {
+    "injection": { "file": "adversarial/injection.md", "expect": { "quotes": 1, "labels": ["N", "G", null, "P"], "minIssues": 0 } },
+    "fence_and_code": { "file": "adversarial/fence_and_code.md", "expect": { "quotes": 1, "minIssues": 0 } },
+    "unclosed_nested": { "file": "adversarial/unclosed_nested.md", "expect": { "quotes": 0, "minIssues": 2 } },
+    "forged_links": { "file": "adversarial/forged_links.md", "expect": { "quotes": 0, "minIssues": 0 } },
+    "forged_chip_forms": { "file": "adversarial/forged_chip_forms.md", "expect": { "quotes": 1, "labels": ["N", "P", "P", "P", "P", "P", null], "minIssues": 0 } },
+    "forged_badge_comment": { "file": "adversarial/forged_badge_comment.md", "expect": { "quotes": 1, "labels": ["P", null, null], "minIssues": 0 } },
+    "label_mid_table": { "file": "adversarial/label_mid_table.md", "expect": { "quotes": 1, "minIssues": 0 } },
+    "too_many_quotes": { "file": "adversarial/too_many_quotes.md", "expect": { "quotes": 40, "minIssues": 5 } }
+  },
+  "m2": {
+    "about": "M2 entries (BRIEF_S S7). Read by B's parser tests and the m2 gate, not by the M1 loops over `tasks`/`adversarial`. Expectations are for the M2 parser: blocksInvalid lists the BlockError values validateBlocks must report (each listed error must be among the reported ones; `requestedTerm` is the glossary_define request); blocksAdversarial gives the task and invariants after parseBlocks + parseAnswer(labels:'strip'); adversarial items give the parseAnswer options and invariants.",
+    "adversarial": {
+      "translate_with_tags": {"file": "adversarial/translate_with_tags.md", "task": "translate_selection", "options": {"mode": "plain"}, "expect": {"citations": 0, "blocks": 0, "glossary": 0, "chips": 0, "badges": 0}},
+      "forged_link_forms_d6": {"file": "adversarial/forged_link_forms_d6.md", "task": "chat", "options": {}, "expect": {"quotes": 0, "chips": 0, "labels": ["N", null, "G", null]}}
+    },
+    "blocksInvalid": {
+      "notation_missing_key": {"file": "blocks_invalid/notation_missing_key.md", "task": "notation_card", "expect": {"errors": [{"code": "missing_key", "key": "units"}]}},
+      "notation_duplicate_key": {"file": "blocks_invalid/notation_duplicate_key.md", "task": "notation_card", "expect": {"errors": [{"code": "duplicate_key", "key": "units"}, {"code": "missing_key", "key": "time_notation"}]}},
+      "notation_bad_label": {"file": "blocks_invalid/notation_bad_label.md", "task": "notation_card", "expect": {"errors": [{"code": "bad_label", "item": 3}]}},
+      "assumptions_bad_category": {"file": "blocks_invalid/assumptions_bad_category.md", "task": "assumptions_card", "expect": {"errors": [{"code": "bad_category", "item": 2}]}},
+      "assumptions_limitation_without_stated": {"file": "blocks_invalid/assumptions_limitation_without_stated.md", "task": "assumptions_card", "expect": {"errors": [{"code": "missing_stated", "item": 2}]}},
+      "glossary_two_terms": {"file": "blocks_invalid/glossary_two_terms.md", "task": "glossary_define", "requestedTerm": "robust kernel", "expect": {"errors": [{"code": "term_count"}]}},
+      "glossary_wrong_name": {"file": "blocks_invalid/glossary_wrong_name.md", "task": "glossary_define", "requestedTerm": "robust kernel", "expect": {"errors": [{"code": "term_name_mismatch"}]}}
+    },
+    "blocksAdversarial": {
+      "forged_item_badge": {"file": "blocks_adversarial/forged_item_badge.md", "task": "notation_card", "expect": {"items": 11, "forgedCitations": 0, "note": "[P](#sp-label-p), [❝1](#sp-cite-1) and the <q> inside the HTML comment produce no citation, chip or badge"}},
+      "item_in_fence": {"file": "blocks_adversarial/item_in_fence.md", "task": "notation_card", "expect": {"items": 11, "forgedCitations": 0, "note": "the <item> inside the code fence is text"}},
+      "item_mid_line": {"file": "blocks_adversarial/item_mid_line.md", "task": "notation_card", "expect": {"items": 11, "forgedCitations": 0, "note": "an <item> that does not start its line is text"}},
+      "nested_item": {"file": "blocks_adversarial/nested_item.md", "task": "notation_card", "expect": {"items": null, "valid": false, "forgedCitations": 0, "note": "same-kind nesting is not allowed (an issue / validation error, never two items)"}},
+      "attr_injection": {"file": "blocks_adversarial/attr_injection.md", "task": "notation_card", "expect": {"items": null, "forgedCitations": 0, "note": "a tag with a non-whitelisted attribute (onclick, title) is text; titles come only from NOTATION_TITLES_KO"}},
+      "sixty_one_items": {"file": "blocks_adversarial/sixty_one_items.md", "task": "assumptions_card", "expect": {"items": null, "maxItems": 60, "note": "61 items: over SP_BLOCKS_LIMITS.maxItems"}},
+      "body_inline_labels": {"file": "blocks_adversarial/body_inline_labels.md", "task": "notation_card", "expect": {"items": 11, "forgedCitations": 0, "note": "[[P]] / [[G]] in item bodies are stripped (labels:strip); the item label is the attribute only"}},
+      "control_chars": {"file": "blocks_adversarial/control_chars.md", "task": "notation_card", "expect": {"items": null, "forgedCitations": 0, "note": "U+0003/U+0004 are removed before parsing; an attribute value with a control character is not whitelisted"}}
+    }
+  }
+}

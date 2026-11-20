@@ -1,0 +1,6 @@
+[
+  {"name": "lightningcss", "version": "1.33.0", "license": "MPL-2.0", "reason": "build-time CSS tool, a direct dependency of vite@8.3.8 and of @tailwindcss/node. Installed and run unmodified, never copied into this repository and not shipped to the browser, so MPL-2.0 (file-level copyleft) puts no obligation on our code. Re-review on any version change.", "approved": true, "approvedBy": "supervisor", "approvedOn": "2026-11-16"},
+  {"name": "lightningcss-linux-x64-gnu", "version": "1.33.0", "license": "MPL-2.0", "reason": "platform binary of lightningcss, same reason.", "approved": true, "approvedBy": "supervisor", "approvedOn": "2026-11-16"},
+  {"name": "lightningcss-linux-x64-musl", "version": "1.33.0", "license": "MPL-2.0", "reason": "platform binary of lightningcss, same reason.", "approved": true, "approvedBy": "supervisor", "approvedOn": "2026-11-16"},
+  {"name": "pako", "version": "1.0.11", "license": "(MIT AND Zlib)", "reason": "dependency of pdf-lib (devDependency, used only to generate the synthetic fixture PDF). Zlib is a permissive license; installed unmodified, not copied into this repository.", "approved": true, "approvedBy": "supervisor", "approvedOn": "2026-11-16"}
+]
