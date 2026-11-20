@@ -12,6 +12,16 @@ Sunlight is a paper reader that runs on your computer. When you get stuck on a p
 
 On Linux x64 with glibc, you'll need **Node.js 22.23.5 and npm 10**. If you use nvm, `nvm install` picks up the version from the repository. Run these commands from your checkout.
 
+The quickest way, once you have [Node.js](https://nodejs.org) 22+ installed:
+
+```sh
+./start.sh
+```
+
+That installs, builds and starts the app. Open the `http://127.0.0.1:…` address it prints; press Ctrl+C to stop.
+
+Install Node from [nodejs.org](https://nodejs.org) or nvm, not your Linux distribution's `npm` package (it is often broken). Or do the steps yourself:
+
 ```sh
 npm ci
 npm run build

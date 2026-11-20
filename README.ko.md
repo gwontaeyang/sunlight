@@ -12,6 +12,16 @@ Sunlight는 내 컴퓨터에서 쓰는 논문 리더입니다. 읽다가 막히�
 
 Linux x64(glibc)에서 **Node.js 22.23.5와 npm 10**을 준비하세요. nvm을 쓴다면 내려받은 폴더에서 `nvm install`을 실행하면 됩니다. 같은 폴더에서 아래 세 줄을 실행하세요.
 
+가장 빠른 방법은 [Node.js](https://nodejs.org) 22 이상을 설치한 뒤:
+
+```sh
+./start.sh
+```
+
+설치·빌드·실행을 한 번에 합니다. 찍히는 `http://127.0.0.1:…` 주소를 열고, 끌 때는 Ctrl+C를 누르세요.
+
+Node는 [nodejs.org](https://nodejs.org)나 nvm으로 설치하세요(배포판 `npm` 패키지는 깨져 있는 경우가 많습니다). 직접 단계별로 하려면:
+
 ```sh
 npm ci
 npm run build
