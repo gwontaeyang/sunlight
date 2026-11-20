@@ -56,7 +56,7 @@ export class Backends {
     const settings = readSettings(this.sqlite);
     const backend = settings['llm.backend'];
     const role = TASK_SPECS[task].model;
-    const model = settings['llm.economy'] && (role === 'deepModel' || role === 'paperModel') ? 'sonnet' : resolveModel(task);
+    const model = task !== 'study_path' && settings['llm.economy'] && (role === 'deepModel' || role === 'paperModel') ? 'sonnet' : resolveModel(task);
     const executionMode = this.mode(backend);
     if (executionMode !== 'api') {
       const adapter: LlmAdapter =

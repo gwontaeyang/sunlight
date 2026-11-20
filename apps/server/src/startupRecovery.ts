@@ -45,6 +45,7 @@ export function startupRecovery(sqlite: Sqlite, paths: DataPaths, now = Date.now
     const resultRawCleared = run(`UPDATE llm_calls SET resultRaw = NULL WHERE resultRaw IS NOT NULL AND (finishedAt IS NULL OR finishedAt <= ? OR paperId IS NULL)`, suggestionExpiryCutoff(now));
     // ① before streaming → interrupted: an uncommitted regenerate turn disappears, the old turn stays.
     const pendingReplaceMessages = run(`DELETE FROM messages WHERE pendingReplace = 1`);
+    run(`UPDATE study_paths SET pendingRunId=NULL, pendingCodeLanguage=NULL, pendingRegenerate=0 WHERE pendingRunId IS NOT NULL`);
     const llmCalls = run(`UPDATE llm_calls SET status='interrupted', finishedAt=? WHERE status IN ('queued','running')`, now);
     const messages = run(`UPDATE messages SET status='interrupted' WHERE status='streaming'`);
     const paperCards = run(`UPDATE paper_cards SET status='interrupted' WHERE status='generating'`);

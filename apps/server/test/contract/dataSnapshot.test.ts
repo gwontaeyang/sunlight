@@ -154,7 +154,7 @@ describe('data-snapshot (I6)', () => {
     const snap = snapDirNear(data);
     const s = await snapshot({ data, out: snap });
     expect(s.tables).toMatchObject({ papers: 4, threads: 1, messages: 2, citations: 1, highlights: 1 });
-    expect(s.migrations).toEqual(['0000_init', '0001_citations_triggers', '0002_m2', '0003_api']);
+    expect(s.migrations).toEqual(['0000_init', '0001_citations_triggers', '0002_m2', '0003_api', '0004_study_path']);
     const v = await verify({ snapshot: snap });
     expect(v).toMatchObject({ ok: true, failureCount: 0, paperRows: 4, paperDirs: 4, papersWithoutDir: 0, unreferencedFiles: 0 });
     const snapSet = Object.fromEntries(Object.entries(tree(snap)).filter(([k]) => k !== SNAPSHOT_JSON && k !== MANIFEST));

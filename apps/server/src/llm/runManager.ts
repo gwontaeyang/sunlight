@@ -51,10 +51,12 @@ import {
 import { reportedErrors } from '@study-paper/shared/markup/blockSchemas';
 import { parseAnswer } from '@study-paper/shared/markup/parseAnswer';
 import type { Db } from '../db/client';
-import { llmCalls, messages, pageTexts, paperCards, papers, threads } from '../db/schema';
+import { llmCalls, messages, pageTexts, paperCards, papers, settings, threads } from '../db/schema';
 import { HttpError } from '../deps';
 import type { Lifecycle } from '../lifecycle';
 import type { DataPaths } from '../paths';
+import { hasStudyExamples, splitStudyPath, studyPathCitations, STUDY_PATH_MAX_CHARS } from '@study-paper/shared/study-path';
+import { commitStudyPath, failStudyPath, readStudyPath, studyPathPending } from '../studyPath/store';
 import { suggestionAvailable } from '../resultRetention';
 import { CARD_KIND_OF_TASK, cardAlive, commitCard, failCard, prepareCard, reparseCard, type PreparedCardItem } from '../study/paperCards';
 import { commitSuggestion, prepareSuggestion, reparseSuggestion, storedSuggestionTerm } from '../study/glossary';
@@ -195,8 +197,8 @@ class RunLog {
  * Where a run's result is stored (PLAN_M2 3.4 "Run과 저장"): a card when the start rows made one (artifactId), the run
  * row for glossary_define, else the assistant message (also a card task started with message rows, as M1 tests do).
  */
-export type SinkKind = 'message' | 'card' | 'suggestion';
-const sinkOfStart = (task: TaskId, artifactId: string | undefined): SinkKind => (artifactId !== undefined && CARD_KIND_OF_TASK[task] !== undefined ? 'card' : task === 'glossary_define' ? 'suggestion' : 'message');
+export type SinkKind = 'message' | 'card' | 'suggestion' | 'study_path';
+const sinkOfStart = (task: TaskId, artifactId: string | undefined): SinkKind => (task === 'study_path' ? 'study_path' : artifactId !== undefined && CARD_KIND_OF_TASK[task] !== undefined ? 'card' : task === 'glossary_define' ? 'suggestion' : 'message');
 
 interface Run {
   selection?: import('../byok/backend').Selection;
@@ -225,6 +227,7 @@ interface Run {
 
 /** Result of a sink's prepare step (outside any transaction). */
 type Prepared =
+  | { kind: 'study_path'; parsed: ParsedAnswer; cites: Citation[]; stats: MessageStats; checkCount: number }
   | { kind: 'message'; parsed: ParsedAnswer | null; cites: Citation[]; stats: MessageStats | null }
   | { kind: 'card'; parsed: ParsedBlocks | ParsedAnswer; items: PreparedCardItem[] }
   | { kind: 'suggestion'; parsed: ParsedBlocks; cites: Citation[] };
@@ -313,6 +316,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
   /** The sink of a stored run: card tasks without an assistant message are card runs. */
   const sinkOfRow = (row: CallRow): SinkKind => {
     const task = row.task as TaskId;
+    if (task === 'study_path') return 'study_path';
     if (task === 'glossary_define') return 'suggestion';
     if (CARD_KIND_OF_TASK[task] !== undefined && !assistantOf(row.runId)) return 'card';
     return 'message';
@@ -338,6 +342,12 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
         return { kind: 'done', data: { text: row.resultRaw!, parsed, citations: cites, stats: null } };
       }
       if (!alive) return { kind: 'deleted' };
+      if (sink === 'study_path') {
+        const result = readStudyPath(db, row.paperId!).result;
+        if (!result || result.runId !== row.runId) return { kind: 'deleted' };
+        const parsed = parseAnswer(result.text, { final: true });
+        return { kind: 'done', data: { text: result.text, parsed, citations: result.citations, stats: computeStats(parsed, result.citations) } };
+      }
       if (sink === 'card') {
         const card = cardOf(row.runId);
         if (!card || card.status !== 'complete' || card.rawOutput === null) return { kind: 'deleted' };
@@ -381,7 +391,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
     const sink = sinkOfRow(row);
     const msg = sink === 'message' ? assistantOf(row.runId) : undefined;
     const card = sink === 'card' ? cardOf(row.runId) : undefined;
-    return { event: 'run.accepted', data: { runId: row.runId, task: row.task as TaskId, ...(row.threadId ? { threadId: row.threadId } : {}), ...(msg ? { messageId: msg.id } : {}), ...(card ? { artifactId: card.id } : {}) } };
+    return { event: 'run.accepted', data: { runId: row.runId, task: row.task as TaskId, ...(row.threadId ? { threadId: row.threadId } : {}), ...(msg ? { messageId: msg.id } : {}), ...(card ? { artifactId: card.id } : sink === 'study_path' ? { artifactId: row.runId } : {}) } };
   }
 
   /** Attach to a run that is no longer in memory (or whose result is gone): run.accepted + its terminal, from the DB. */
@@ -449,6 +459,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
   }
   /** A running run can no longer store its result: paper tombstoned or gone, or its message / card row deleted. */
   function liveResultGone(r: Run): boolean {
+    if (r.sink === 'study_path') return !studyPathPending(db, r.input.paperId, r.runId);
     if (r.sink === 'card') return r.artifactId === null || !cardAlive(db, r.artifactId);
     if (r.sink === 'message' && r.messageId !== null) return !messageOwnerAlive(db, r);
     return !paperAlive(r.input.paperId);
@@ -457,6 +468,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
   function ownerStillThere(row: CallRow): boolean {
     if (!paperAlive(row.paperId)) return false;
     const sink = sinkOfRow(row);
+    if (sink === 'study_path') return studyPathPending(db, row.paperId, row.runId);
     if (sink === 'message') return assistantOf(row.runId) !== undefined;
     if (sink === 'card') return cardOf(row.runId) !== undefined;
     return true;
@@ -659,6 +671,12 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
 
       const image = input.imagePngBase64 ?? input.storedImagePngBase64;
       const inputs = { ...input.inputs, ...run.extraInputs };
+      // Use the preference only for tasks with free-form prose. Explicit translation targets and machine
+      // schemas keep their own contract. The language travels after the shared document cache breakpoint.
+      if (!inputs.answerLanguage && (spec.output === 'sp-markup' || spec.output === 'sp-blocks')) {
+        const saved = db.select({ value: settings.valueJson }).from(settings).where(eq(settings.key, 'llm.answerLanguage')).get();
+        if (saved?.value === '"en"') inputs.answerLanguage = 'en';
+      }
       const totalMs = deps.timeouts?.totalMs ?? spec.totalMs;
       const deadline = Date.now() + totalMs;
       let repair: RepairPart | undefined;
@@ -811,6 +829,15 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
       const r = prepareSuggestion(text, input.inputs.term ?? '', paperId ? pagesOf(paperId) : [], paperId ? equationIndex(db, paperId) : []);
       return r.ok ? { ok: true, prepared: { kind: 'suggestion', parsed: r.parsed, cites: r.citations } } : { ok: false, errors: r.errors, repairable: r.repairable };
     }
+    if (run.sink === 'study_path') {
+      if (!paperId || text.length > STUDY_PATH_MAX_CHARS) return { ok: false, errors: [], repairable: false };
+      const parts = splitStudyPath(text);
+      if (!parts.complete || !hasStudyExamples(parts.stages[4]!.body, input.inputs.codeLanguage)) return { ok: false, errors: [], repairable: false };
+      const parsed = parseAnswer(text, { final: true });
+      const cites = resolveCitations(parsed, pagesOf(paperId), equationIndex(db, paperId));
+      if (!studyPathCitations(text, cites)) return { ok: false, errors: [], repairable: false };
+      return { ok: true, prepared: { kind: 'study_path', parsed, cites, stats: computeStats(parsed, cites), checkCount: parts.checklist.length } };
+    }
     const parsed = parseMessageAnswer(input.task, text);
     let cites: Citation[] = [];
     let stats: MessageStats | null = null;
@@ -838,6 +865,10 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
    * tombstoned) — then nothing is written (B-CX-2).
    */
   function sinkCommit(tx: Tx, run: Run, prepared: Prepared, text: string, finishedAt: number): SinkCommit {
+    if (prepared.kind === 'study_path') {
+      const replaced = run.input.paperId ? commitStudyPath(tx, run.input.paperId, run.runId, text, prepared.cites, prepared.checkCount) : null;
+      return replaced === null ? OWNER_DELETED : { kind: 'stored', superseded: replaced };
+    }
     if (prepared.kind === 'card') {
       const superseded = run.artifactId ? commitCard(tx, run.artifactId, text, prepared.items) : null;
       return superseded === null ? OWNER_DELETED : { kind: 'stored', superseded };
@@ -876,6 +907,10 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
   function sinkFail(tx: Tx, run: Run, code: LlmErrorCode, partial: string): void {
     if (run.sink === 'card') {
       if (run.artifactId) failCard(tx, run.artifactId, code, partial);
+      return;
+    }
+    if (run.sink === 'study_path') {
+      if (run.input.paperId) failStudyPath(tx, run.input.paperId, run.runId);
       return;
     }
     if (run.sink === 'suggestion') return; // no owner row: the run row is the record
@@ -958,7 +993,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
     if (sink.kind === 'owner_deleted') return sink;
     // A superseded run still retained in memory would replay its old answer; drop it so every replay says superseded.
     for (const id of sink.superseded) evict(id);
-    const body = prepared.kind === 'message' ? { parsed: prepared.parsed, citations: prepared.cites, stats: prepared.stats } : prepared.kind === 'card' ? { parsed: prepared.parsed, citations: [], stats: null } : { parsed: prepared.parsed, citations: prepared.cites, stats: null };
+    const body = prepared.kind === 'message' || prepared.kind === 'study_path' ? { parsed: prepared.parsed, citations: prepared.cites, stats: prepared.stats } : prepared.kind === 'card' ? { parsed: prepared.parsed, citations: [], stats: null } : { parsed: prepared.parsed, citations: prepared.cites, stats: null };
     return { kind: 'stored', done: { text, ...body, usage, ...(rateLimit ? { rateLimit } : {}) } };
   }
 

@@ -14,9 +14,9 @@ export type Milestone = 0 | 1 | 2 | 3 | 4;
 export const GATED_MILESTONE: Milestone = 2;
 
 /** A is an implementation checkpoint. Only an accepted product stage advances the checked-in gate. */
-export const STAGES = ['m2', 'a', 'c2', 'b', 'c1', 'd'] as const;
+export const STAGES = ['m2', 'a', 'c2', 'study', 'b', 'c1', 'd'] as const;
 export type GateStage = (typeof STAGES)[number];
-export const GATED_STAGE: GateStage = 'c2';
+export const GATED_STAGE: GateStage = 'study';
 
 export function gateStage(preview: string | undefined, accepted: GateStage = GATED_STAGE): GateStage {
   if (!preview) return accepted;
@@ -98,4 +98,7 @@ export const ROUTE_MANIFEST = [
   { route: 'explainBack.create', owner: 'B', milestone: 4 },
   { route: 'explainBack.list', owner: 'B', milestone: 4 },
   { route: 'usage.summary', owner: 'B', milestone: 3, stage: 'c2' },
+  { route: 'studyPath.get', owner: 'B', milestone: 3, stage: 'study' },
+  { route: 'studyPath.generate', owner: 'B', milestone: 3, stage: 'study' },
+  { route: 'studyPath.check', owner: 'B', milestone: 3, stage: 'study' },
 ] as const satisfies readonly RouteManifestEntry[];

@@ -9,7 +9,7 @@ import { tempDir } from '../helpers/tmp';
 const EXPECTED_TABLES = [
   'api_charges', 'citations', 'collections', 'equations', 'explain_backs', 'figures', 'files', 'glossary_terms', 'highlights', 'http_cache', 'jobs',
   'llm_calls', 'messages', 'notes', 'page_texts', 'paper_card_items', 'paper_cards', 'paper_references', 'papers', 'reading_progress',
-  'review_cards', 'review_logs', 'sections', 'settings', 'threads',
+  'review_cards', 'review_logs', 'sections', 'settings', 'study_paths', 'threads',
 ];
 const EXPECTED_TRIGGERS = [
   'citations_owner_exists_bi', 'citations_owner_explain_backs_ad', 'citations_owner_fixed_bu', 'citations_owner_glossary_terms_ad',
@@ -28,7 +28,7 @@ const names = (sqlite: ReturnType<typeof openSqlite>, type: string) =>
 describe('DB migration (PLAN 6)', () => {
   it('a new DB gets every table and citation trigger, without a backup', async () => {
     const { sqlite, r } = await freshDb();
-    expect(r.applied).toEqual(['0000_init', '0001_citations_triggers', '0002_m2', '0003_api']);
+    expect(r.applied).toEqual(['0000_init', '0001_citations_triggers', '0002_m2', '0003_api', '0004_study_path']);
     expect(r.backupPath).toBeNull();
     expect(names(sqlite, 'table')).toEqual(EXPECTED_TABLES);
     expect(names(sqlite, 'trigger')).toEqual(EXPECTED_TRIGGERS);
@@ -111,12 +111,12 @@ describe('DB migration (PLAN 6)', () => {
     // 2. the DB is newer than the code
     const withExtra = migrationsWithExtra(dir + '/extra', '0002_test_noop', 'SELECT 1;');
     await migrateWithBackup(sqlite, { backupsDir: join(dir, 'backups'), migrationsFolder: withExtra });
-    expect(count()).toBe(5);
+    expect(count()).toBe(6);
     await expect(migrateWithBackup(sqlite, { backupsDir: join(dir, 'backups') })).rejects.toThrow(/newer than the code/);
     // 3. a migration with an earlier timestamp appears (branch merge): order no longer matches
     const reordered = migrationsWithExtra(dir + '/reordered', '0002_test_other', 'SELECT 2;');
     await expect(migrateWithBackup(sqlite, { backupsDir: join(dir, 'backups'), migrationsFolder: reordered })).rejects.toThrow(/history mismatch at 0002_test_other/);
-    expect(count()).toBe(5); // nothing was applied by the failed attempts
+    expect(count()).toBe(6); // nothing was applied by the failed attempts
     sqlite.close();
   });
 

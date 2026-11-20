@@ -8,13 +8,13 @@
 import 'katex/dist/katex.min.css';
 import './spMarkdown.css';
 import { cjk } from '@streamdown/cjk';
-import { useMemo, type ReactNode } from 'react';
+import { useContext, useMemo, type ReactNode } from 'react';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { Streamdown, type Components } from 'streamdown';
 import type { Citation, MessageStats, ParsedBlock } from '@study-paper/shared/contracts/domain';
-import { BlockedImage, CitationChip, EqRefChip, ExternalLink, LabelBadge, SpContext, type CitationClickHandler, type SpRenderContext } from './chips';
+import { BlockedImage, CitationChip, EqRefChip, ExternalLink, LabelBadge, SpContext, StudyPathLinkContext, type CitationClickHandler, type SpRenderContext } from './chips';
 import { SP_HREF, statsDetail, type SpPhase } from './grounding';
 import { CHIP_ATTR, CHIP_ID_ATTR, CHIP_KIND_ATTR, COLOCATED_ATTR, remarkSpIndex } from './remarkSpIndex';
 
@@ -54,6 +54,7 @@ const REMARK = [remarkGfm, remarkSpIndex] as const;
 type AProps = { href?: string; children?: ReactNode } & Record<string, unknown>;
 
 function SpLink(props: AProps) {
+  const studyPathLink = useContext(StudyPathLinkContext);
   const href = props.href ?? '';
   const children = props.children;
   if (props[CHIP_ATTR] === '1') {
@@ -78,7 +79,7 @@ function SpLink(props: AProps) {
       </span>
     );
   }
-  return <ExternalLink href={href}>{children}</ExternalLink>;
+  return studyPathLink ? <span>{children}</span> : <ExternalLink href={href}>{children}</ExternalLink>;
 }
 
 function SpImage(props: { src?: unknown; alt?: unknown }) {

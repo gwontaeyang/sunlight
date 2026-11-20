@@ -127,6 +127,27 @@ export function SettingsPage() {
             <p className="text-sl-ui text-sl-muted">
               논문 설명·깊이 읽기 {selected['llm.economy'] ? 'Sonnet' : 'Opus'} · 선택 번역 Sonnet
             </p>
+            <div className="space-y-3 border-t border-sl-line pt-5">
+              <label className="flex flex-wrap items-center justify-between gap-2">
+                <span>AI 답변 언어</span>
+                <select data-testid="rd-answer-language" className={input}
+                  value={selected['llm.answerLanguage'] ?? 'ko'}
+                  onChange={(e) => void patch({ 'llm.answerLanguage': e.target.value === 'en' ? 'en' : 'ko' })}>
+                  <option value="ko">한국어</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <label className="flex flex-wrap items-center justify-between gap-2">
+                <span>학습 흐름의 예시 코드 언어</span>
+                <select data-testid="rd-study-code-language" className={input}
+                  value={selected['study.codeLanguage'] ?? 'cpp17'}
+                  onChange={(e) => void patch({ 'study.codeLanguage': e.target.value === 'python' ? 'python' : 'cpp17' })}>
+                  <option value="cpp17">C++17 · Eigen</option>
+                  <option value="python">Python</option>
+                </select>
+              </label>
+              <p className="text-sl-ui text-sl-muted">다음에 생성하는 글부터 적용됩니다.</p>
+            </div>
             <form onSubmit={saveKey} className="space-y-2 border-t border-sl-line pt-5">
               <label htmlFor="anthropic-key" className="block font-semibold">
                 Anthropic API key

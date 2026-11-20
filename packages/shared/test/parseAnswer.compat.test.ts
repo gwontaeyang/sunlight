@@ -9,6 +9,8 @@ import { parseAnswer } from '../src/markup/parseAnswer';
 import { readMockFile, readMockManifest } from '../src/mockOutputs';
 
 const M1_OUTPUT_SHA256: Record<string, { final: string; streaming: string }> = {
+  // New learning fixture, also evaluated with the unmodified parser and grammar at tag m2-contracts.
+  'study_path.md': { final: '98e8a245d83f4036b2da383fd3e117b4f71fa02d13c5416f9baef61768dd5ec7', streaming: '98e8a245d83f4036b2da383fd3e117b4f71fa02d13c5416f9baef61768dd5ec7' },
   'explain_selection.md': { final: '82ec90dbc5dcc6a6acbf14725dfdbd4979c1bd0d6bb0f77c0db8f21bc933a193', streaming: '82ec90dbc5dcc6a6acbf14725dfdbd4979c1bd0d6bb0f77c0db8f21bc933a193' },
   'chat.md': { final: '5736ce97b4bed9f34f04076bc77481bfe43abb4c2df9e1e22229ebaef6577d82', streaming: '5736ce97b4bed9f34f04076bc77481bfe43abb4c2df9e1e22229ebaef6577d82' },
   'translate_selection.md': { final: '2acb76e003eb19a76b374db8963a89515112c4cc947cf91b677ee4672b875028', streaming: '2acb76e003eb19a76b374db8963a89515112c4cc947cf91b677ee4672b875028' },

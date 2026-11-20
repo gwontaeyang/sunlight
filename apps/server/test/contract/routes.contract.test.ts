@@ -81,6 +81,9 @@ const APPENDIX_A: Record<string, [owner: 'A' | 'B' | 'supervisor', milestone: 0 
   'POST /papers/:id/explain-back': ['B', 4],
   'GET /papers/:id/explain-backs': ['B', 4],
   'GET /usage/summary': ['B', 3],
+  'GET /papers/:id/study-path': ['B', 3],
+  'POST /papers/:id/study-path/generate': ['B', 3],
+  'PATCH /papers/:id/study-path/check': ['B', 3],
 };
 
 const FAKE_ID = '11111111-1111-4111-8111-111111111111';
@@ -152,7 +155,7 @@ describe('routes over HTTP (seed DB + MockLlm)', () => {
     const res = await call('GET', '/health');
     expect(res.status).toBe(200);
     const body = (API_SCHEMAS.health as RouteSchemas).response!.parse(JSON.parse(res.text));
-    expect(body).toMatchObject({ ok: true, db: { ok: true, lastMigration: '0003_api' }, llm: 'mock' });
+    expect(body).toMatchObject({ ok: true, db: { ok: true, lastMigration: '0004_study_path' }, llm: 'mock' });
   });
 
   it('GET /papers and GET /papers/:id match the schemas', async () => {

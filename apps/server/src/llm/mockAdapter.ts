@@ -8,7 +8,7 @@
 // <term name> is set to the request's <requested_term>), as a real model is asked to; overrides are used verbatim.
 import { createHash } from 'node:crypto';
 import type { TaskId } from '@study-paper/shared/contracts/tasks';
-import { readMockOutput } from '@study-paper/shared/mock-outputs';
+import { readMockFile, readMockOutput } from '@study-paper/shared/mock-outputs';
 import type { LlmAdapter, LlmEvent, LlmHealth, LlmRunRequest } from './adapter';
 
 export interface MockLlmOptions {
@@ -82,6 +82,17 @@ export class MockLlmAdapter implements LlmAdapter {
     const o = this.opts.outputs?.[req.task];
     if (o === undefined) {
       const text = readMockOutput(req.task);
+      if (req.task === 'study_path') {
+        const tail = req.tail.at(-1);
+        const taskText = tail?.type === 'text' ? tail.text : '';
+        const blocks = /```(?:cpp|python)\n[\s\S]*?\n```/g;
+        const examples = (taskText.includes('<code_language trust="app">python</code_language>') ? readMockFile('study_path.python.md') : text).match(blocks)!;
+        if (taskText.includes('<answer_language trust="app">en</answer_language>')) {
+          return readMockFile('study_path.en.md').replace(/\{\{example_([12])\}\}/g, (_, n: string) => examples[Number(n) - 1]!);
+        }
+        let index = 0;
+        return text.replace(blocks, () => examples[index++]!);
+      }
       return req.task === 'glossary_define' ? answerForTerm(text, req) : text;
     }
     if (typeof o === 'string') return o;

@@ -26,6 +26,7 @@ const EXPECTED: Record<TaskId, [string, string]> = {
   glossary_define: ['low', 'low'],
   cards_from_highlights: ['high', 'high'],
   explain_back_grade: ['high', 'high'],
+  study_path: ['high', 'high'],
   pdf_metadata: ['low', 'low'],
 };
 

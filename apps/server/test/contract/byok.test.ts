@@ -28,7 +28,7 @@ import type { LlmEvent, LlmRunRequest } from '../../src/llm/adapter';
 import { snapshot } from '../../../../scripts/lib/dataSnapshot';
 import { backupDatabase } from '../../src/db/backup';
 import { childEnv, buildArgs } from '../../src/llm/claudeCli';
-import { SEED_PAPER_ID } from '../../src/dev/seedFixture';
+import { SEED_M2_PAPER_ID, SEED_PAPER_ID } from '../../src/dev/seedFixture';
 import { sseEvents } from '../routes/threads.cases';
 import { startTestServer } from '../helpers/server';
 import { tempDir } from '../helpers/tmp';
@@ -274,7 +274,7 @@ it('keeps health diagnostics available when stored provider settings cannot be d
     server.deps.sqlite.prepare('INSERT OR REPLACE INTO settings(key,valueJson) VALUES (?,?)').run('llm.backend', damaged);
     const degraded = await health();
     expect(degraded.status).toBe(200);
-    expect(JSON.parse(degraded.text)).toMatchObject({ ok: false, llm: 'mock', db: { ok: false, lastMigration: '0003_api' } });
+    expect(JSON.parse(degraded.text)).toMatchObject({ ok: false, llm: 'mock', db: { ok: false, lastMigration: '0004_study_path' } });
     expect(JSON.parse(degraded.text)).not.toHaveProperty('backend');
     expect(degraded.text).not.toContain(damaged);
     server.deps.sqlite.prepare('DELETE FROM settings WHERE key=?').run('llm.backend');
@@ -460,7 +460,7 @@ it('upgrades a populated M2 database and verifies the backup retains its origina
   ).run();
   const before = db.prepare('SELECT hash FROM __drizzle_migrations ORDER BY created_at').all();
   const migrated = await migrateWithBackup(db, { backupsDir });
-  expect(migrated.applied).toEqual(['0003_api']);
+  expect(migrated.applied).toEqual(['0003_api', '0004_study_path']);
   expect(db.prepare('SELECT model,inputTokens,backend,executionMode FROM llm_calls WHERE runId=?').get('past')).toEqual({
     model: 'fable',
     inputTokens: 500,
@@ -521,4 +521,55 @@ it('repairs through a second paid request on the accepted backend, generation, m
   } finally {
     await server.close();
   }
+});
+
+it('manually generates a study path through the SDK transport on Opus, persists it, and charges only once on replay', async () => {
+  const lesson = readMockOutput('study_path');
+  const bodies: Record<string, unknown>[] = [];
+  const fallback = {
+    mode: 'cli' as const,
+    health: new MockLlmAdapter().health,
+    run() { throw new Error('unexpected subscription dispatch'); },
+  };
+  let server = await startTestServer({
+    env: 'prod', papers: ['m2'], llm: fallback,
+    apiTransport: async (_url, init) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return response('end_turn', true, API_MODELS.opus, lesson);
+    },
+  });
+  const paper = '/api/papers/' + SEED_M2_PAPER_ID + '/study-path';
+  const call = (method: string, suffix: string, body?: unknown) => server.req(paper + suffix, {
+    method, headers: { 'X-SP-Token': server.token, 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  try {
+    server.deps.backends.provider.credentials.change(sentinel());
+    writeSettings(server.deps.sqlite, { 'llm.backend': 'api', 'llm.economy': true, 'llm.monthlyLimitMicroUsd': 20_000_000 });
+    expect(JSON.parse((await call('GET', '')).text)).toEqual({ result: null, pending: null });
+    expect(bodies).toHaveLength(0);
+    const body = { clientRequestId: randomUUID() };
+    const events = sseEvents((await call('POST', '/generate', body)).text);
+    const accepted = events[0];
+    if (accepted?.event !== 'run.accepted') throw new Error('expected accepted');
+    expect(events.at(-1)?.event).toBe('run.done');
+    const { runId } = accepted.data;
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0]).toMatchObject({ model: API_MODELS.opus, stream: true, thinking: { type: 'adaptive' } });
+    expect(monthUsage(server.deps.sqlite)).toMatchObject({ heldMicroUsd: 0, spentMicroUsd: 242, apiCalls: 1 });
+    expect((await call('PATCH', '/check', { runId, index: 0, checked: true })).status).toBe(200);
+    server = await server.restart();
+    const stored = JSON.parse((await call('GET', '')).text);
+    expect(stored).toMatchObject({ result: { runId, text: lesson, codeLanguage: 'cpp17' }, pending: null });
+    expect(stored.result.checked[0]).toBe(true);
+    expect(stored.result.citations).toEqual([
+      expect.objectContaining({ kind: 'quote', status: 'verbatim' }),
+      expect.objectContaining({ kind: 'equation', status: 'resolved' }),
+    ]);
+    expect(JSON.stringify(bodies[0])).toContain('A synthetic reference');
+    const replay = sseEvents((await call('POST', '/generate', body)).text);
+    expect(replay.at(-1)).toMatchObject({ event: 'run.done', data: { text: lesson, citations: stored.result.citations } });
+    expect((await call('POST', '/generate', { clientRequestId: randomUUID() })).status).toBe(409);
+    expect(bodies).toHaveLength(1);
+  } finally { await server.close(); }
 });

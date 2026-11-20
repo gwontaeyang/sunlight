@@ -69,6 +69,9 @@ export const INPUT_KEYS = [
   'equation',
   /** JSON {before, after, prev, next} */
   'neighbors',
+  'codeLanguage',
+  'answerLanguage',
+  'references',
 ] as const;
 export type InputKey = (typeof INPUT_KEYS)[number];
 
@@ -171,6 +174,24 @@ export function serializeTask(task: TaskId, inputs: Record<string, string | unde
   };
   const parts: string[] = [`<task name="${task}" v="1">`, `<instructions trust="app">\n${template}\n</instructions>`];
 
+  const language = v('answerLanguage');
+  if (language !== undefined) {
+    if (language !== 'en' && language !== 'ko') throw new Error('invalid answer language');
+    parts.push(block('answer_language', 'app', language));
+  }
+  if (task === 'study_path') {
+    const code = v('codeLanguage') ?? 'cpp17';
+    if (code !== 'cpp17' && code !== 'python') throw new Error('invalid code language');
+    parts.push(block('code_language', 'app', code));
+    const refs = jsonOf(v('references'), (x) => {
+      if (!Array.isArray(x)) throw new Error('invalid references');
+      return x.slice(0, 100).map((r: { idx?: number; title?: unknown }) => {
+        if (!Number.isSafeInteger(r.idx) || r.idx! < 0) throw new Error('invalid reference ordinal');
+        return { idx: r.idx!, title: clean(str(r.title, 'reference title'), 180) };
+      });
+    });
+    if (refs?.length) parts.push(block('references', 'paper', JSON.stringify(refs)));
+  }
   const history = fitHistory(parseHistory(v('history')));
   if (history.length) {
     parts.push('<history>');

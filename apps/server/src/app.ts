@@ -19,6 +19,7 @@ import { progressRoutes } from './routes/progress';
 import { reviewRoutes } from './routes/review';
 import { reviewGenerateRoutes } from './routes/reviewGenerate';
 import { settingsRoutes } from './routes/settings';
+import { studyPathRoutes } from './routes/studyPath';
 import { threadsRoutes } from './routes/threads';
 import { usageRoutes } from './routes/usage';
 import { apiGuard, allowList, hostGuard } from './security/guard';
@@ -40,6 +41,7 @@ export const ROUTE_MODULES: Record<string, RouteModule> = {
   settings: settingsRoutes,
   threads: threadsRoutes,
   paperCards: paperCardsRoutes,
+  studyPath: studyPathRoutes,
   glossary: glossaryRoutes,
   reviewGenerate: reviewGenerateRoutes,
   explainBack: explainBackRoutes,

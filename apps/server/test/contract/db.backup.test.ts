@@ -63,10 +63,10 @@ describe('backup before migration (PLAN 6, db.backup.test)', () => {
     const backupPath = (err as MigrationError).backupPath!;
     expect(existsSync(backupPath)).toBe(true);
     expect((err as Error).message).toContain('npm run db:restore --');
-    // Original unchanged: rows present, partial DDL rolled back, still 3 applied migrations.
+    // Original unchanged: rows present, partial DDL rolled back, still 5 applied migrations.
     expect(rowCount(sqlite, `SELECT count(*) AS n FROM papers WHERE id='p-latest'`)).toBe(1);
     expect((sqlite.prepare(`SELECT name FROM pragma_table_info('papers') WHERE name='willRollBack'`).all() as unknown[]).length).toBe(0);
-    expect(rowCount(sqlite, `SELECT count(*) AS n FROM __drizzle_migrations`)).toBe(4);
+    expect(rowCount(sqlite, `SELECT count(*) AS n FROM __drizzle_migrations`)).toBe(5);
     sqlite.close();
 
     // Simulate a damaged DB, then restore.

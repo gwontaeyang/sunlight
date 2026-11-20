@@ -33,6 +33,9 @@ export const SpContext = createContext<SpRenderContext>({ phase: 'final', citati
  */
 export const StructureContext = createContext<StructureResponse | undefined>(undefined);
 
+/** In a Study path, links come from the paper index and an equation can open the matching reader tab. */
+export const StudyPathLinkContext = createContext<((equationId: string) => void) | null>(null);
+
 const base = 'mx-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0 align-baseline text-sl-label leading-5 whitespace-nowrap';
 const neutral = `${base} border border-gray-300 bg-gray-100 text-gray-600`;
 
@@ -186,6 +189,7 @@ export function EquationPopover({ latex, katexOk, equationId, onClose }: { latex
 export function EqRefChip({ ordinal, text }: { ordinal: number; text: string }) {
   const { phase, citations } = useContext(SpContext);
   const structure = useContext(StructureContext);
+  const openEquation = useContext(StudyPathLinkContext);
   const c = citations.get(ordinal);
   const { jump, notLocated } = useJump(c);
   const eqJump = useEquationJump();
@@ -205,6 +209,7 @@ export function EqRefChip({ ordinal, text }: { ordinal: number; text: string }) 
             title="수식 색인에서 찾음 — 클릭하면 이동 (식 참조는 주장 내용과 대조하지 않음)"
             onClick={() => {
               if (c.equationId === undefined) return void jump(); // M1-shaped citation: the citation jump
+              openEquation?.(c.equationId);
               if (c.latex !== undefined) setOpen(true);
               void eqJump.jump(c.equationId);
             }}
@@ -226,7 +231,10 @@ export function EqRefChip({ ordinal, text }: { ordinal: number; text: string }) 
             tabIndex={c.latex !== undefined ? 0 : undefined}
             className={`${base} border border-emerald-600 bg-white text-emerald-800${c.latex !== undefined ? ' cursor-pointer' : ''}`}
             title="수식 색인에 있지만 PDF 위치 정보가 없어 이동할 수 없음 — 클릭하면 수식 보기"
-            onClick={() => c.latex !== undefined && setOpen((o) => !o)}
+            onClick={() => {
+              if (c.equationId) openEquation?.(c.equationId);
+              if (c.latex !== undefined) setOpen((o) => !o);
+            }}
           >
             {name}
           </span>

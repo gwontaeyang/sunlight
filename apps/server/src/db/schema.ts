@@ -490,6 +490,16 @@ export const apiCharges = sqliteTable('api_charges', {
   usageJson: text('usageJson'),
 }, (t) => [index('api_charges_month_idx').on(t.month)]);
 
+// The pending reservation is created before its llm_calls row in the same transaction.
+// The last completed result remains visible through cancellation or a failed regeneration.
+export const studyPaths = sqliteTable('study_paths', {
+  paperId: text('paperId').primaryKey().references(() => papers.id, { onDelete: 'cascade' }),
+  resultJson: text('resultJson'),
+  pendingRunId: text('pendingRunId'),
+  pendingCodeLanguage: text('pendingCodeLanguage', { enum: ['cpp17', 'python'] }),
+  pendingRegenerate: integer('pendingRegenerate', { mode: 'boolean' }).notNull().default(false),
+});
+
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   valueJson: text('valueJson').notNull(),

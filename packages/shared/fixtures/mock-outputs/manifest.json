@@ -13,6 +13,7 @@
     "glossary_define": { "file": "glossary_define.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 1, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
     "cards_from_highlights": { "file": "cards_from_highlights.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 2, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
     "explain_back_grade": { "file": "explain_back_grade.md", "format": "sp-blocks", "expect": { "quotes": { "verbatim": 3, "ambiguous": 0, "notFound": 0 }, "eqRefs": 0, "issues": 0 } },
+    "study_path": { "file": "study_path.md", "format": "sp-markup", "expect": { "quotes": { "verbatim": 1, "ambiguous": 0, "notFound": 0 }, "eqRefs": 1, "issues": 0 } },
     "pdf_metadata": { "file": "pdf_metadata.json", "format": "json-schema", "expect": null }
   },
   "adversarial": {

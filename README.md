@@ -40,6 +40,8 @@ For a difficult passage, select the text and press **E** for an explanation, or 
 
 Before closing the paper, highlight the line you want to revisit or press **N** to leave yourself a note. Save a term in the glossary or mark your reading progress in the outline when you finish a section.
 
+Want to implement the method yourself? Open **학습 흐름** (Study path) in the reader and choose **학습 흐름 만들기**. Work from the earlier method and its limits to the paper’s changes, equations and runnable examples. Check off what you have tried. Reopening the paper keeps your guide and checks. Settings lets you choose C++17 with Eigen or Python for the next guide you generate.
+
 ## AI settings
 
 Open **설정** (Settings) from the library or reader. If you're already signed in to the `claude` CLI on this computer, choose **Claude Code 구독** to use your subscription.
@@ -53,10 +55,6 @@ Save a monthly USD cap before the first API question. The form suggests $20. Set
 The server listens only on this computer. PDFs, notes, and the SQLite database stay in `${XDG_DATA_HOME:-~/.local/share}/study_paper/`. Next to it are `study_paper-config/` for optional settings and `study_paper-secrets/` for the key. The key file is readable only by your OS account (0600), inside a private directory (0700). Study-data backups exclude it.
 
 Importing a paper contacts arXiv. When you ask for AI help, your chosen provider receives what the task needs. That can include your question, the paper or its text, and an image you selected.
-
-## Roadmap
-
-- **Study path (planned)** — follow how a paper's argument develops as you read.
 
 ## Development
 

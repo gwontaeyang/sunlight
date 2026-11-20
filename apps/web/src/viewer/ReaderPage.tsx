@@ -23,6 +23,7 @@ import { useReaderStore, type PaperState } from '../state/readerStore';
 import { Icon } from '../ui/icons';
 import { useThemeStore } from '../ui/theme';
 import { Outline } from './Outline';
+import { StudyPathView } from './StudyPathView';
 import { PdfReader } from './PdfReader';
 import { LeftRail, OUTLINE_DOCK_MIN_PX, PaperInfoButton, PaperToneToggle, ReaderBarSlot, useMediaQuery, useReaderUiStore } from './ReaderChrome';
 
@@ -92,11 +93,18 @@ export function ReaderPage({ paperId }: { paperId: string }) {
   }, [wide, drawerOpen]);
   const [barSlot, setBarSlot] = useState<HTMLElement | null>(null);
 
+  const [studyPaper, setStudyPaper] = useState<{ id: string; open: boolean } | null>(null);
+  const studyOpen = studyPaper?.id === paperId && studyPaper.open;
+  const studyToggle = useRef<HTMLButtonElement>(null);
+  const closeStudy = () => {
+    setStudyPaper({ id: paperId, open: false });
+    studyToggle.current?.focus({ preventScroll: true });
+  };
+  const hasProvider = useAiSettings().data?.aiAvailable !== false;
   if (paper.isError) return <div className="p-4 text-red-700">논문을 불러오지 못했습니다: {String((paper.error as Error).message)}</div>;
   const p = paper.data;
   const outline = p && <Outline paperId={paperId} upgradeAvailable={p.structureUpgrade.available} upgradeJob={p.structureUpgrade.job} />;
   const ai = p ? aiStatus(p) : null;
-  const hasProvider = useAiSettings().data?.aiAvailable !== false;
   return (
     <div
       className="sl-reader grid h-full bg-sl-surface text-sl-ink"
@@ -114,6 +122,15 @@ export function ReaderPage({ paperId }: { paperId: string }) {
           <h1 className="min-w-0 truncate border-l border-sl-line pl-2.5 font-semibold" data-testid="paper-title" title={p?.title}>
             {p?.title ?? '…'}
           </h1>
+          {p && (
+            <button
+              ref={studyToggle} type="button" data-testid="rd-study-path-open" aria-pressed={studyOpen}
+              className={`shrink-0 rounded-sl-control border px-2 py-1 font-semibold ${studyOpen ? 'border-sl-accent bg-sl-accent-soft text-sl-accent' : 'border-sl-edge text-sl-body hover:bg-sl-subtle'}`}
+              onClick={() => setStudyPaper({ id: paperId, open: !studyOpen })}
+            >
+              학습 흐름
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-0.5" data-testid="rd-bar-center">
           <button
@@ -176,13 +193,21 @@ export function ReaderPage({ paperId }: { paperId: string }) {
         </aside>
       )}
       <main className="relative col-start-3 row-start-2 min-w-0 bg-sl-canvas">
-        <ReaderBarSlot.Provider value={barSlot}>
-          {p && p.state.readable && <PdfReader paperId={paperId} initialPosition={p.lastPosition} />}
-        </ReaderBarSlot.Provider>
-        {p && !p.state.readable && (
-          <div className="p-4 text-sl-ui text-sl-muted" data-testid="reader-not-readable">
-            {p.ingestStatus === 'running' ? 'PDF를 가져오는 중입니다…' : `PDF가 없습니다${p.lastJob?.error ? `: ${p.lastJob.error}` : ''}`}
-          </div>
+        <div className="h-full" inert={studyOpen}>
+          <ReaderBarSlot.Provider value={barSlot}>
+            {p && p.state.readable && <PdfReader paperId={paperId} initialPosition={p.lastPosition} />}
+          </ReaderBarSlot.Provider>
+          {p && !p.state.readable && (
+            <div className="p-4 text-sl-ui text-sl-muted" data-testid="reader-not-readable">
+              {p.ingestStatus === 'running' ? 'PDF를 가져오는 중입니다…' : `PDF가 없습니다${p.lastJob?.error ? `: ${p.lastJob.error}` : ''}`}
+            </div>
+          )}
+        </div>
+        {p && studyPaper?.id === paperId && (
+          <StudyPathView key={paperId} paper={p} open={studyOpen} onClose={closeStudy}
+            canGenerate={hasProvider && ai?.available === true}
+            unavailable={hasProvider ? ai?.text ?? '논문 색인을 확인하고 있습니다.' : '설정에서 AI 사용 방식을 선택하세요.'}
+          />
         )}
         {!wide && drawerOpen && (
           <>

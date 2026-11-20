@@ -77,6 +77,9 @@ export const ROUTES = [
   { id: 'explainBack.create', method: 'POST', path: '/papers/:id/explain-back', response: 'sse' },
   { id: 'explainBack.list', method: 'GET', path: '/papers/:id/explain-backs', response: 'json' },
   { id: 'usage.summary', method: 'GET', path: '/usage/summary', response: 'json' },
+  { id: 'studyPath.get', method: 'GET', path: '/papers/:id/study-path', response: 'json' },
+  { id: 'studyPath.generate', method: 'POST', path: '/papers/:id/study-path/generate', response: 'sse' },
+  { id: 'studyPath.check', method: 'PATCH', path: '/papers/:id/study-path/check', response: 'json' },
 ] as const satisfies readonly RouteDef[];
 
 export type RouteId = (typeof ROUTES)[number]['id'];

@@ -21,6 +21,7 @@ const EXPECTED: Record<TaskId, number> = {
   glossary_define: 60_000,
   cards_from_highlights: 120_000,
   explain_back_grade: 120_000,
+  study_path: 120_000,
   pdf_metadata: 30_000,
 };
 

@@ -9,9 +9,11 @@ export const cases: RouteCase[] = [
     expect: 'ok',
     check: (r) =>
       expect(Object.keys((r.json as { settings: object }).settings).sort()).toEqual([
+        'llm.answerLanguage',
         'llm.backend',
         'llm.economy',
         'llm.monthlyLimitMicroUsd',
+        'study.codeLanguage',
       ]),
   },
   { route: 'settings.put', name: 'set budget', body: { settings: { 'llm.monthlyLimitMicroUsd': 20_000_000 } }, expect: 'ok' },

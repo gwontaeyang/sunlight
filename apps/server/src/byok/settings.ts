@@ -1,7 +1,13 @@
 import { UserSettings } from '@study-paper/shared/contracts/api';
 import type { Sqlite } from '../db/client';
 
-const defaults: UserSettings = { 'llm.backend': 'subscription', 'llm.monthlyLimitMicroUsd': null, 'llm.economy': false };
+const defaults: UserSettings = {
+  'llm.backend': 'subscription',
+  'llm.monthlyLimitMicroUsd': null,
+  'llm.economy': false,
+  'llm.answerLanguage': 'ko',
+  'study.codeLanguage': 'cpp17',
+};
 export function readSettings(sqlite: Sqlite): UserSettings {
   const values = { ...defaults };
   const query = sqlite.prepare('SELECT valueJson FROM settings WHERE key=?');
