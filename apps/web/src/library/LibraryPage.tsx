@@ -1,6 +1,6 @@
 import { SettingsLink, AiSetupHint } from '../settings/SettingsPage';
 // Library (PLAN 8.5, M1): arXiv import with job progress, paper list with ingest state, open, delete (with
-// confirmation), retry of a failed ingest. Owner C. Collections, search and upload are M3.
+// confirmation), retry of a failed ingest. Owner C. The local PDF importer completes before its row is shown.
 // After a reload, papers whose ingest is still running are re-subscribed with lastJob.id (papers.get); without
 // a job id the list is polled.
 // M2 (BRIEF_C C8): structure badge per row from papers.list alone; rows that can be upgraded get the upgrade control
@@ -14,6 +14,8 @@ import { qk } from '../api/queryKeys';
 import { formatStoredJobError, STEP_LABELS, useJobProgress, type JobProgress } from './jobs';
 import { Icon, Wordmark } from '../ui/icons';
 import { ThemeSwitch } from '../ui/theme';
+import { PdfUpload } from './PdfUpload';
+import { UploadPaperTitle } from './UploadPaperTitle';
 import { aiStatus } from './readiness';
 import { StructureBadge, StructureUpgradeControl } from './StructureUpgrade';
 
@@ -96,30 +98,33 @@ export function LibraryPage() {
             </span>
           )}
         </div>
-        <form className="mb-2 flex gap-2" onSubmit={onSubmit}>
-          <label className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-sl-control border border-sl-edge bg-sl-surface px-3 text-sl-muted focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-sl-accent">
-            <Icon name="import" size={16} />
-            <span className="text-sl-ui font-semibold text-sl-body">arXiv</span>
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sl-reading text-sl-ink outline-none focus-visible:outline-none"
-              placeholder="arXiv ID 또는 URL (예: 2209.15397, https://arxiv.org/abs/2209.15397v2)"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              maxLength={500}
-              data-testid="import-input"
-              aria-label="arXiv ID 또는 URL"
-            />
-          </label>
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center gap-2 rounded-sl-control bg-sl-accent px-4 text-sl-ui font-semibold text-sl-on-accent disabled:bg-sl-subtle disabled:text-sl-meta"
-            disabled={!input.trim() || importPaper.isPending}
-            data-testid="import-button"
-          >
-            {importPaper.isPending ? '요청 중…' : '가져오기'}
-            <Icon name="arrow" size={15} />
-          </button>
-        </form>
+        <div className="mb-2 grid items-start gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+          <form className="flex min-w-0 gap-2" onSubmit={onSubmit}>
+            <label className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-sl-control border border-sl-edge bg-sl-surface px-3 text-sl-muted focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-sl-accent">
+              <Icon name="import" size={16} />
+              <span className="text-sl-ui font-semibold text-sl-body">arXiv</span>
+              <input
+                className="min-w-0 flex-1 bg-transparent text-sl-reading text-sl-ink outline-none focus-visible:outline-none"
+                placeholder="arXiv ID 또는 URL (예: 2209.15397, https://arxiv.org/abs/2209.15397v2)"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                maxLength={500}
+                data-testid="import-input"
+                aria-label="arXiv ID 또는 URL"
+              />
+            </label>
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center gap-2 rounded-sl-control bg-sl-accent px-4 text-sl-ui font-semibold text-sl-on-accent disabled:bg-sl-subtle disabled:text-sl-meta"
+              disabled={!input.trim() || importPaper.isPending}
+              data-testid="import-button"
+            >
+              {importPaper.isPending ? '요청 중…' : '가져오기'}
+              <Icon name="arrow" size={15} />
+            </button>
+          </form>
+          <PdfUpload />
+        </div>
         {message && (
           <p role={message.error ? 'alert' : 'status'} className={`mb-2 text-sl-ui ${message.error ? 'text-red-700' : 'text-sl-muted'}`} data-testid="import-message">
             {message.text}
@@ -131,7 +136,7 @@ export function LibraryPage() {
           {papers.data && papers.data.papers.length === 0 && (
             <div className="rounded-sl-control border border-dashed border-sl-line-strong px-4 py-8 text-center text-sl-ui text-sl-muted" data-testid="rd-library-empty">
               <p>아직 논문이 없습니다.</p>
-              <p className="mt-1 text-sl-label text-sl-meta">위 칸에 arXiv ID나 주소를 넣어 가져오세요.</p>
+              <p className="mt-1 text-sl-label text-sl-meta">arXiv 주소를 입력하거나 가지고 있는 PDF를 올려 보세요.</p>
             </div>
           )}
           <ul className={papers.data?.papers.length ? 'border-t border-sl-edge' : ''} data-testid="paper-list">
@@ -192,11 +197,15 @@ function PaperRow({ paper: p, progress, watch }: { paper: PaperSummaryDto; progr
           <Link href={`/paper/${p.id}`} className="text-[16px] leading-6 font-semibold tracking-[-0.2px] text-sl-ink hover:underline">
             {p.title}
           </Link>
+          {p.source === 'upload' && <UploadPaperTitle id={p.id} title={p.title} />}
           {meta && <div className="text-sl-label text-sl-meta">{meta}</div>}
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span className={`${CHIP} ${TONE[status.tone]}`} data-testid="paper-status" title={aiBlocked ?? undefined}>
               {status.label}
             </span>
+            {p.source === 'upload' && (
+              <span data-testid="rd-upload-source" className={`${CHIP} border-sl-edge text-sl-muted`}>업로드 PDF</span>
+            )}
             <StructureBadge paper={p} />
           </div>
         </div>

@@ -1,6 +1,6 @@
 // Owner A. Routes: 'papers.import', 'papers.list', 'papers.get', 'papers.patch', 'papers.delete', 'papers.pdf',
-// 'papers.retryIngest' (M1); 'papers.structure', 'papers.upgradeStructure', 'papers.capture' (M2); 'papers.upload'
-// arrives in M3 (501 until then). lastJob = the latest INGEST job; the upgrade job is structureUpgrade.job only.
+// 'papers.retryIngest' (M1); 'papers.structure', 'papers.upgradeStructure', 'papers.capture' (M2); 'papers.upload' (M3).
+// lastJob = the latest INGEST job; the upgrade job is structureUpgrade.job only.
 import { createReadStream, existsSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -9,6 +9,7 @@ import { LastPositionDto, type PaperDetailDto, type PaperSummaryDto, type Struct
 import { NormRectSchema, type NormRect } from '@study-paper/shared/contracts/domain';
 import { collections, equations, figures, files, paperReferences, papers, sections } from '../db/schema';
 import { notFound, routeBody, routeJson, routeParams, type AppDeps, type RouteModule } from '../deps';
+import { createPdfUploader } from '../ingest/upload';
 import { resetStoredCooldown } from '../ingest/cooldownStore';
 import { aiAvailability } from '../ingest/readiness';
 import { DELETE_WAIT_MS, ingestService, INGEST_KINDS, latestJob, PDF_FILE, peekIngest, UPGRADE_KINDS } from '../ingest/pipeline';
@@ -206,7 +207,8 @@ export const papersRoutes: RouteModule = (deps) => {
   // SP_ARXIV_COOLDOWN_RESET=1 applies when the server starts (createApp builds the route modules once, after the
   // startup recovery and before listen), not only when the ingest service is first created (BRIEF_A A1). Idempotent.
   if (deps.config.arxivCooldownReset) resetStoredCooldown(deps.sqlite, 'arxiv');
-  return papersHandlers(deps);
+  const upload = createPdfUploader(deps);
+  return { ...papersHandlers(deps), 'papers.upload': async (c) => routeJson(c, 'papers.upload', await upload(c.req.raw)) };
 };
 
 const papersHandlers: RouteModule = (deps) => ({

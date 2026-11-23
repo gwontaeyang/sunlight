@@ -64,8 +64,9 @@ function StudyStage({ stage, citations, streaming, structure, children, onClose 
   );
 }
 
-export function StudyPathView({ paper, open, onClose, canGenerate, unavailable }: {
+export function StudyPathView({ paper, uploaded = false, open, onClose, canGenerate, unavailable }: {
   paper: Pick<PaperDetailDto, 'id' | 'title' | 'codeUrl'>;
+  uploaded?: boolean;
   open: boolean;
   onClose(): void;
   canGenerate: boolean;
@@ -136,6 +137,9 @@ export function StudyPathView({ paper, open, onClose, canGenerate, unavailable }
             <button type="button" data-testid="rd-study-path-close" className={control} onClick={onClose}>PDF로</button>
           </header>
 
+          {uploaded && <p className="mb-4 rounded-sl-control border border-sl-line bg-sl-subtle p-3 text-sl-ui text-sl-muted" data-testid="rd-upload-study-limit">
+            업로드 PDF의 학습 흐름은 원문 인용과 식 번호를 검증하지 않습니다. 설명과 수식은 PDF를 함께 보며 확인하세요.
+          </p>}
           {saved.isPending && <p role="status">저장한 학습 흐름을 불러오는 중입니다.</p>}
           {saved.isError && <p role="alert">학습 흐름을 불러오지 못했습니다. <button className={control} onClick={() => void saved.refetch()}>다시 불러오기</button></p>}
           {saved.data && (

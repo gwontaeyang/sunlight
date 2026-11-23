@@ -81,7 +81,7 @@ export function LeftRail() {
   );
 }
 
-/** "원본 색 보기" ↔ "야간 쪽으로": the night filter of the PDF page on / off (night theme only). */
+/** "원본 색 보기" ↔ "Dark로 보기": the night filter of the PDF page on / off (night theme only). */
 export function PaperToneToggle() {
   const theme = useThemeStore((s) => s.theme);
   const tone = useThemeStore((s) => s.tone);
@@ -93,17 +93,17 @@ export function PaperToneToggle() {
       type="button"
       data-testid="rd-paper-tone"
       aria-pressed={original}
-      title={original ? '쪽을 야간 색으로 보기' : 'PDF 쪽(그림·표 포함)을 원본 색으로 보기'}
+      title={original ? 'PDF 쪽을 Dark로 보기' : 'PDF 쪽(그림·표 포함)을 원본 색으로 보기'}
       className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[6px] border px-2 text-sl-label ${original ? 'border-sl-accent-line bg-sl-accent-soft text-sl-accent' : 'border-sl-edge text-sl-muted hover:text-sl-ink'}`}
       onClick={toggleTone}
     >
       <Icon name="pageshade" size={15} />
-      {original ? '야간 쪽으로' : '원본 색 보기'}
+      {original ? 'Dark로 보기' : '원본 색 보기'}
     </button>
   );
 }
 
-const STRUCTURE_SOURCE_KO: Record<string, string> = { latexml: 'arXiv HTML(LaTeXML)', 'pdf-outline': 'PDF 목차', none: '없음' };
+const STRUCTURE_SOURCE_KO: Record<string, string> = { latexml: 'arXiv HTML(LaTeXML)', 'pdf-outline': 'PDF 목차', 'pdf-inferred': 'PDF 본문에서 추정한 목차', none: '없음' };
 
 /** "ⓘ" in the top bar: version · pages, structure source · index, AI state, usage limit unknown. */
 export function PaperInfoButton({ paper }: { paper: PaperDetailDto | undefined }) {

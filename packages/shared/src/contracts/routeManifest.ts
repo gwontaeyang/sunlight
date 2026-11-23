@@ -14,9 +14,9 @@ export type Milestone = 0 | 1 | 2 | 3 | 4;
 export const GATED_MILESTONE: Milestone = 2;
 
 /** A is an implementation checkpoint. Only an accepted product stage advances the checked-in gate. */
-export const STAGES = ['m2', 'a', 'c2', 'study', 'b', 'c1', 'd'] as const;
+export const STAGES = ['m2', 'a', 'c2', 'study', 'upload', 'b', 'c1', 'd'] as const;
 export type GateStage = (typeof STAGES)[number];
-export const GATED_STAGE: GateStage = 'study';
+export const GATED_STAGE: GateStage = 'upload';
 
 export function gateStage(preview: string | undefined, accepted: GateStage = GATED_STAGE): GateStage {
   if (!preview) return accepted;
@@ -60,7 +60,6 @@ export const ROUTE_MANIFEST = [
   { route: 'notes.delete', owner: 'A', milestone: 2 },
   { route: 'progress.list', owner: 'A', milestone: 2 },
   { route: 'progress.put', owner: 'A', milestone: 2 },
-  { route: 'papers.upload', owner: 'A', milestone: 4 },
   { route: 'collections.list', owner: 'A', milestone: 4 },
   { route: 'collections.create', owner: 'A', milestone: 4 },
   { route: 'collections.patch', owner: 'A', milestone: 4 },
@@ -101,4 +100,5 @@ export const ROUTE_MANIFEST = [
   { route: 'studyPath.get', owner: 'B', milestone: 3, stage: 'study' },
   { route: 'studyPath.generate', owner: 'B', milestone: 3, stage: 'study' },
   { route: 'studyPath.check', owner: 'B', milestone: 3, stage: 'study' },
+  { route: 'papers.upload', owner: 'A', milestone: 3, stage: 'upload' },
 ] as const satisfies readonly RouteManifestEntry[];

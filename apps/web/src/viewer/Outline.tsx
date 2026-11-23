@@ -56,12 +56,13 @@ const STATE_ORDER: readonly ReadingState[] = ['unread', 'skimmed', 'understood',
 
 export interface OutlineProps {
   paperId: string;
+  uploaded?: boolean;
   /** structureUpgrade.available of papers.get (the upgrade control when there is no structure). */
   upgradeAvailable: boolean;
   upgradeJob?: JobDto | null;
 }
 
-export function Outline({ paperId, upgradeAvailable, upgradeJob }: OutlineProps) {
+export function Outline({ paperId, uploaded, upgradeAvailable, upgradeJob }: OutlineProps) {
   // keeps the control (and a final failure's reason) after papers.get turns available off (C-R1-04)
   const upgradeSeen = useUpgradeStore((s) => s.byPaper[paperId] !== undefined);
   const qc = useQueryClient();
@@ -116,6 +117,13 @@ export function Outline({ paperId, upgradeAvailable, upgradeJob }: OutlineProps)
             </span>
           )}
         </div>
+        {uploaded && structure.data && (
+          <p className="mt-1 text-sl-label text-sl-muted" data-testid="rd-upload-outline-source">
+            {structure.data.structureSource === 'pdf-outline' ? 'PDF 책갈피에서 가져온 목차'
+              : structure.data.structureSource === 'pdf-inferred' ? '추정된 구조 · 글자 크기와 배치 기준'
+                : '이 PDF에서 절 제목을 구분하지 못했습니다.'}
+          </p>
+        )}
         {hasStructure && (
           <div className="mt-2 h-[3px] overflow-hidden rounded-sm bg-sl-line" role="progressbar" aria-label="이해 이상" aria-valuemin={0} aria-valuemax={summary.total} aria-valuenow={progressReady ? summary.understood : undefined}>
             <i className="block h-full rounded-sm bg-sl-sun" style={{ width: `${progressReady && summary.total ? (summary.understood * 100) / summary.total : 0}%` }} />

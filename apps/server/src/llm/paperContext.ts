@@ -1,14 +1,13 @@
 // Paper context = the cached prefix of every paper task (PLAN 2.4 "메시지 구성"). Owner B.
 //   [ {type:'document', source:{type:'base64', media_type:'application/pdf', data}},
 //     {type:'text', text:<supplement.txt>, cache_control:{type:'ephemeral', ttl:'1h'}} ]
-// Built with a fixed key order so the JSON bytes are identical for every task on the same paper. The run reads
-// paper.pdf and supplement.txt at start and compares their sha256 with the `papers` row (A writes both once,
-// then never overwrites them); any mismatch or missing piece → context_not_ready. contextMode 'text' arrives in
-// M3 — until then such a paper ends with too_large.
+// Fixed key order keeps prefix bytes identical across tasks. Verify each file included in the prefix
+// against its recorded SHA-256. Large text-mode uploads send the hash-verified supplement with page excerpts.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { eq } from 'drizzle-orm';
+import { isPdfOnlyUpload } from '@study-paper/shared/contracts/domain';
 import type { Db } from '../db/client';
 import { papers } from '../db/schema';
 import type { DataPaths } from '../paths';
@@ -61,21 +60,29 @@ export interface PaperContext {
 /** Loads and verifies the context of one paper (throws ContextError). */
 export function loadPaperContext(db: Db, paths: DataPaths, paperId: string): PaperContext {
   const paper = db
-    .select({ contextReadyAt: papers.contextReadyAt, contextMode: papers.contextMode, pdfSha256: papers.pdfSha256, supplementSha256: papers.supplementSha256, supplementVersion: papers.supplementVersion, deletingAt: papers.deletingAt })
+    .select({ source: papers.source, structureSource: papers.structureSource, contextReadyAt: papers.contextReadyAt, contextMode: papers.contextMode, pdfSha256: papers.pdfSha256, supplementSha256: papers.supplementSha256, supplementVersion: papers.supplementVersion, deletingAt: papers.deletingAt })
     .from(papers)
     .where(eq(papers.id, paperId))
     .get();
   if (!paper || paper.deletingAt !== null) throw new ContextError('context_not_ready', 'paper not found');
   if (paper.contextReadyAt === null || !paper.contextMode || !paper.pdfSha256 || !paper.supplementSha256) throw new ContextError('context_not_ready', 'paper context is not ready yet');
-  if (paper.contextMode === 'text') throw new ContextError('too_large', 'this paper needs text context mode (not available before M3)');
+  if (paper.contextMode === 'text' && !isPdfOnlyUpload(paper.source, paper.structureSource)) throw new ContextError('too_large', 'this paper needs text context mode (not available before M3)');
   const dir = paths.paperDir(paperId);
   const pdfFile = join(dir, 'paper.pdf');
   // S (PLAN_M2 D1): the version on the row picks the file (v1 supplement.txt, v2 supplement.v2.txt).
   const supFile = paths.supplementFile(paperId, paper.supplementVersion ?? 1);
   if (!existsSync(pdfFile) || !existsSync(supFile)) throw new ContextError('context_not_ready', 'paper files are missing');
-  const pdf = readFileSync(pdfFile);
   const supBytes = readFileSync(supFile);
-  if (sha256(pdf) !== paper.pdfSha256) throw new ContextError('context_not_ready', 'paper.pdf does not match its recorded sha256');
   if (sha256(supBytes) !== paper.supplementSha256) throw new ContextError('context_not_ready', 'supplement.txt does not match its recorded sha256');
+  if (paper.contextMode === 'text') {
+    const text = supBytes.toString('utf8');
+    if (!text.endsWith('</paper_text>\n')) throw new ContextError('context_not_ready', 'no extracted text for this uploaded PDF');
+    return {
+      prefix: [{ type: 'text', text, cache_control: { type: 'ephemeral', ttl: '1h' } }],
+      contextMode: 'text', pdfSha256: paper.pdfSha256, supplementSha256: paper.supplementSha256,
+    };
+  }
+  const pdf = readFileSync(pdfFile);
+  if (sha256(pdf) !== paper.pdfSha256) throw new ContextError('context_not_ready', 'paper.pdf does not match its recorded sha256');
   return { prefix: buildPaperPrefix(pdf, supBytes.toString('utf8')), contextMode: 'pdf', pdfSha256: paper.pdfSha256, supplementSha256: paper.supplementSha256 };
 }

@@ -7,10 +7,10 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import type { Citation, CitationOwnerType } from '@study-paper/shared/contracts/domain';
-import { eqNumberKey, UncheckedReason } from '@study-paper/shared/contracts/domain';
+import { eqNumberKey, isPdfOnlyUpload, UncheckedReason } from '@study-paper/shared/contracts/domain';
 import type { Db } from '../db/client';
-import { citations as citationsTable, equations, glossaryTerms, messages, paperCardItems, paperCards, sections, threads } from '../db/schema';
-import { candidateFields, equationFields, equationRowsByKey, type EquationIndexRow } from './citations';
+import { citations as citationsTable, equations, glossaryTerms, messages, pageTexts, paperCardItems, paperCards, papers, sections, threads } from '../db/schema';
+import { candidateFields, equationFields, equationRowsByKey, type EquationIndexRow, type GroundingPages } from './citations';
 import type { RunTx } from './runContract';
 
 type Reader = Db | RunTx;
@@ -27,6 +27,13 @@ function ownerPaperId(db: Reader, ownerType: CitationOwnerType, ownerId: string)
   }
   if (ownerType === 'glossary_term') return db.select({ paperId: glossaryTerms.paperId }).from(glossaryTerms).where(eq(glossaryTerms.id, ownerId)).get()?.paperId ?? null;
   return null;
+}
+
+export function groundingPages(db: Reader, paperId: string): GroundingPages {
+  const row = db.select({ source: papers.source, structureSource: papers.structureSource }).from(papers).where(eq(papers.id, paperId)).get();
+  if (row && isPdfOnlyUpload(row.source, row.structureSource)) return null;
+  return db.select({ page: pageTexts.page, text: pageTexts.text }).from(pageTexts)
+    .where(eq(pageTexts.paperId, paperId)).orderBy(asc(pageTexts.page)).all();
 }
 
 /** The numbered equations of a paper as index rows (with ids, LaTeX and section numbers) — what the runs match against. */

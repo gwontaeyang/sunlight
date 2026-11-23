@@ -7,14 +7,15 @@ import { SettingsLink, AiSetupHint, useAiSettings } from '../settings/SettingsPa
 // left aside is the outline + reading progress (Outline.tsx); the reader restores PaperDetailDto.lastPosition.
 // papers.get → readerStore.openPaper; while ingest runs and the context is not ready, the paper is re-read every
 // 1.5 s and the state pushed with setPaperState (the AI buttons wait for contextReady).
-// M1.1 M5: the store's contextReady is "AI usable with the current LLM" (PaperSummaryDto.ai), so a ready paper in
-// contextMode 'text' keeps every AI button disabled with aiBlockedReason instead of failing with too_large.
+// The store uses PaperSummaryDto.ai for AI availability, including text excerpts for larger uploads.
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import type { PaperDetailDto } from '@study-paper/shared/contracts/api';
 import { api } from '../api/client';
 import { qk } from '../api/queryKeys';
+import { isPdfOnlyUpload } from '@study-paper/shared/contracts/domain';
+import { UploadedPaperContext } from '../markdown/chips';
 import { SidePanel } from '../panel/SidePanel';
 import { aiStatus } from '../library/readiness';
 import { StructureUpgradeControl } from '../library/StructureUpgrade';
@@ -103,9 +104,11 @@ export function ReaderPage({ paperId }: { paperId: string }) {
   const hasProvider = useAiSettings().data?.aiAvailable !== false;
   if (paper.isError) return <div className="p-4 text-red-700">논문을 불러오지 못했습니다: {String((paper.error as Error).message)}</div>;
   const p = paper.data;
-  const outline = p && <Outline paperId={paperId} upgradeAvailable={p.structureUpgrade.available} upgradeJob={p.structureUpgrade.job} />;
+  const pdfOnly = p ? isPdfOnlyUpload(p.source, p.structureSource) : false;
+  const outline = p && <Outline paperId={paperId} uploaded={pdfOnly} upgradeAvailable={p.structureUpgrade.available} upgradeJob={p.structureUpgrade.job} />;
   const ai = p ? aiStatus(p) : null;
   return (
+    <UploadedPaperContext.Provider value={pdfOnly}>
     <div
       className="sl-reader grid h-full bg-sl-surface text-sl-ink"
       style={{ gridTemplateColumns: 'var(--spacing-sl-rail) auto minmax(0, 1fr) auto var(--spacing-sl-rail)', gridTemplateRows: 'var(--spacing-sl-bar) minmax(0, 1fr)' }}
@@ -204,7 +207,7 @@ export function ReaderPage({ paperId }: { paperId: string }) {
           )}
         </div>
         {p && studyPaper?.id === paperId && (
-          <StudyPathView key={paperId} paper={p} open={studyOpen} onClose={closeStudy}
+          <StudyPathView key={paperId} paper={p} uploaded={pdfOnly} open={studyOpen} onClose={closeStudy}
             canGenerate={hasProvider && ai?.available === true}
             unavailable={hasProvider ? ai?.text ?? '논문 색인을 확인하고 있습니다.' : '설정에서 AI 사용 방식을 선택하세요.'}
           />
@@ -226,7 +229,8 @@ export function ReaderPage({ paperId }: { paperId: string }) {
           </>
         )}
       </main>
-      <SidePanel paperId={paperId} />
+      <SidePanel paperId={paperId} uploaded={pdfOnly} textExcerpts={pdfOnly && p?.contextMode === 'text'} />
     </div>
+    </UploadedPaperContext.Provider>
   );
 }

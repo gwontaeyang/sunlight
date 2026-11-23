@@ -2,29 +2,37 @@
 // The badge is drawn from PaperSummaryDto alone (structureSource · supplementVersion · structureUpgradeAvailable).
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { isPdfOnlyUpload } from '@study-paper/shared/contracts/domain';
 import type { JobDto, PaperSummaryDto } from '@study-paper/shared/contracts/api';
 import { STEP_LABELS } from './jobs';
 import { resumeUpgrade, startUpgrade, UPGRADE_CONFIRM_TEXT, useUpgradeStore } from './upgrade';
 
-export type StructureBadgeKind = 'v2' | 'upgradable' | 'none';
+export type StructureBadgeKind = 'v2' | 'upgradable' | 'none' | 'pdf-outline' | 'pdf-inferred';
+type BadgePaper = Pick<PaperSummaryDto, 'structureSource' | 'supplementVersion' | 'structureUpgradeAvailable' | 'ingestStatus'> & Partial<Pick<PaperSummaryDto, 'source'>>;
 
 /** Badge of a paper row; null while the paper is still being ingested (nothing settled yet). */
-export function structureBadge(p: Pick<PaperSummaryDto, 'structureSource' | 'supplementVersion' | 'structureUpgradeAvailable' | 'ingestStatus'>): StructureBadgeKind | null {
+export function structureBadge(p: BadgePaper): StructureBadgeKind | null {
   if (p.structureUpgradeAvailable) return 'upgradable';
+  if (p.source && isPdfOnlyUpload(p.source, p.structureSource)) {
+    if (p.structureSource === 'pdf-inferred' || p.structureSource === 'pdf-outline') return p.structureSource;
+    return p.ingestStatus === 'running' ? null : 'none';
+  }
   if (p.supplementVersion === 2) return 'v2';
   if (p.ingestStatus === 'running') return null;
   return 'none';
 }
 
-export const STRUCTURE_BADGE_KO: Record<StructureBadgeKind, string> = { v2: '색인 v2', upgradable: '구조 색인 만들 수 있음', none: '구조 없음' };
+export const STRUCTURE_BADGE_KO: Record<StructureBadgeKind, string> = { v2: '색인 v2', upgradable: '구조 색인 만들 수 있음', none: '구조 없음', 'pdf-outline': 'PDF 책갈피', 'pdf-inferred': '추정된 구조' };
 /** concept_CD chips: v2 = plain outline, upgradable = the accent, none = dashed (the shape differs, not only the colour). */
 const BADGE_TONE: Record<StructureBadgeKind, string> = {
   v2: 'border-sl-line-strong text-sl-muted',
+  'pdf-outline': 'border-sl-line-strong text-sl-muted',
+  'pdf-inferred': 'border-dashed border-sl-edge text-sl-meta',
   upgradable: 'border-transparent bg-sl-accent-soft text-sl-accent',
   none: 'border-dashed border-sl-edge text-sl-meta',
 };
 
-export function StructureBadge({ paper }: { paper: Pick<PaperSummaryDto, 'structureSource' | 'supplementVersion' | 'structureUpgradeAvailable' | 'ingestStatus'> }) {
+export function StructureBadge({ paper }: { paper: BadgePaper }) {
   const kind = structureBadge(paper);
   if (!kind) return null;
   return (

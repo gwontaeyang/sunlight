@@ -136,7 +136,7 @@ test('night theme and the original colours: the page filter goes and comes back,
   await expect(tone).toHaveText('원본 색 보기');
   await tone.click();
   await expect(tone).toHaveAttribute('aria-pressed', 'true');
-  await expect(tone).toHaveText('야간 쪽으로');
+  await expect(tone).toHaveText('Dark로 보기');
   expect(await filter()).toBe('none');
   expect(await panelBg()).toBe(darkBg); // only the page changes, the reader stays dark
   await tone.click();

@@ -1,5 +1,5 @@
 // The reason of an `unchecked` quote chip (BRIEF_D D3, PLAN_M2 3.3 uncheckedReason): chip text and tooltip in Korean for
-// the three reasons, and a stored row without a reason (M1 data) read as the work budget. Review D-R1-08. Owner D.
+// the reasons, and a stored row without a reason (M1 data) read as the work budget. Review D-R1-08. Owner D.
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Citation, UncheckedReason } from '@study-paper/shared/contracts/domain';
@@ -16,6 +16,7 @@ describe('unchecked quote chip: reason text', () => {
     ['quote_too_long', '인용이 너무 김', '인용이 너무 김'],
     ['text_too_long', '논문이 너무 김', '논문이 너무 김'],
     ['work_budget', '작업량 초과', '대조 시간 한도'],
+    ['uploaded_pdf', '업로드 PDF · 대조 제한', '업로드 PDF에서는 인용 원문을 검증하지 않습니다'],
     [undefined, '작업량 초과', '대조 시간 한도'],
   ] as const)('%s → chip "(%s)", tooltip "(%s)"', (reason, chipText, title) => {
     render(<StoredMarkup {...pairStored(`<q>${Q}</q> [[P]]`, [unchecked(reason)])} />);
@@ -29,7 +30,7 @@ describe('unchecked quote chip: reason text', () => {
   });
 
   it('the table covers every UncheckedReason with distinct chip texts', () => {
-    expect(Object.keys(UNCHECKED_TEXT).sort()).toEqual(['quote_too_long', 'text_too_long', 'work_budget']);
-    expect(new Set(Object.values(UNCHECKED_TEXT).map((t) => t.chip)).size).toBe(3);
+    expect(Object.keys(UNCHECKED_TEXT).sort()).toEqual(['quote_too_long', 'text_too_long', 'uploaded_pdf', 'work_budget']);
+    expect(new Set(Object.values(UNCHECKED_TEXT).map((t) => t.chip)).size).toBe(4);
   });
 });

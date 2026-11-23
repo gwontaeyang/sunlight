@@ -5,7 +5,9 @@ import { contrastSample, type ContrastPart } from './themeContrast';
 
 async function scheme(page: Page, theme: 'light' | 'dark') {
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-  await expect(page.getByTestId(`rd-theme-${theme}`)).toHaveAttribute('aria-pressed', 'true');
+  const toggle = page.getByRole('button', { name: theme === 'light' ? 'Light' : 'Dark', exact: true });
+  await expect(toggle).toHaveAttribute('data-testid', `rd-theme-${theme}`);
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('html')).toHaveCSS('color-scheme', theme);
 }
 

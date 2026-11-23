@@ -21,6 +21,8 @@ export function aiStatus(p: Pick<PaperSummaryDto, 'state' | 'ingestStatus' | 'pa
   const ai = !p.state.contextReady ? { available: false, reason: 'context_not_ready' as const } : (p.ai ?? { available: true, reason: null });
   if (ai.available) return { available: true, reason: null, text: null, short: null };
   switch (ai.reason) {
+    case 'upload_no_text':
+      return { available: false, reason: ai.reason, short: AI_UNSUPPORTED, text: '이 PDF에서 텍스트를 추출하지 못해 AI 설명을 사용할 수 없습니다. PDF 읽기와 영역 노트는 사용할 수 있습니다.' };
     case 'text_mode_pages':
       return {
         available: false,

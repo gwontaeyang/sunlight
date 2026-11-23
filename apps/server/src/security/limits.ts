@@ -40,5 +40,11 @@ export function contentTypeGuard(route: RouteId): MiddlewareHandler {
 /** Streaming-aware size limit (Content-Length and chunked bodies) → 413 error DTO. */
 export function sizeGuard(route: RouteId): MiddlewareHandler {
   const maxSize = maxBodyBytes(route);
+  // The upload writer counts every received chunk before writing it. Hono's generic
+  // middleware otherwise buffers a whole chunked PDF before the writer acquires a slot.
+  if (RAW_PDF_ROUTES.has(route)) return async (c, next) => {
+    if (Number(c.req.header('content-length')) > maxSize) return c.json(errorDto('payload_too_large', `request body exceeds ${maxSize} bytes`), 413);
+    await next();
+  };
   return bodyLimit({ maxSize, onError: (c) => c.json(errorDto('payload_too_large', `request body exceeds ${maxSize} bytes`), 413) });
 }

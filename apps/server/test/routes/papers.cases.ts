@@ -40,6 +40,19 @@ function fake(ctx: CaseContext, id: string, failAt?: 'supplement'): void {
 }
 
 export const cases: RouteCase[] = [
+  {
+    route: 'papers.upload', name: 'stores and indexes a local PDF before returning', expect: 'ok',
+    raw: () => ({ body: readFileSync(new URL('../fixtures/synthetic-m2.pdf', import.meta.url)), contentType: 'application/pdf', headers: { 'X-SP-Filename': 'synthetic-m2.pdf' } }),
+    check: (r, ctx) => {
+      const res = r.json as { paperId: string; jobId: string | null; existing: boolean };
+      expect(res).toMatchObject({ jobId: null, existing: false });
+      expect(paperRow(ctx.server.deps, res.paperId)).toMatchObject({ source: 'upload', ingestStatus: 'done', supplementVersion: 2 });
+    },
+  },
+  {
+    route: 'papers.upload', name: 'rejects a PDF filename on a non-PDF body', expect: 'validation',
+    raw: { body: Buffer.from('plain text'), contentType: 'application/pdf', headers: { 'X-SP-Filename': 'paper.pdf' } },
+  },
   // papers.import
   {
     route: 'papers.import',

@@ -128,7 +128,7 @@ describe('ALLOW_RATE_WARNING has one writer (결정 26)', () => {
 
   it('shell scripts: a line that names ALLOW_RATE_WARNING only prints a refusal to stderr and exits 2 — no redirect, copy or other write (INT-WARNOK-R2-01)', () => {
     const sh = sourceFilesSh(REPO_ROOT).map((f) => relative(REPO_ROOT, f));
-    expect(sh).toEqual(['scripts/live-runbook.sh']); // a new shell script is scanned here too: add it to this list
+    expect(sh).toEqual(['scripts/live-runbook.sh', 'start.sh']); // a new shell script is scanned here too: add it to this list
     const named: string[] = [];
     for (const rel of sh) {
       for (const line of readFileSync(join(REPO_ROOT, rel), 'utf8').split('\n')) {

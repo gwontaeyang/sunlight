@@ -33,6 +33,9 @@ export const SpContext = createContext<SpRenderContext>({ phase: 'final', citati
  */
 export const StructureContext = createContext<StructureResponse | undefined>(undefined);
 
+/** Uploaded PDFs have no LaTeXML index. Show equation numbers as plain, unverified text. */
+export const UploadedPaperContext = createContext(false);
+
 /** In a Study path, links come from the paper index and an equation can open the matching reader tab. */
 export const StudyPathLinkContext = createContext<((equationId: string) => void) | null>(null);
 
@@ -127,6 +130,7 @@ export function CitationChip({ ordinal }: { ordinal: number }) {
 
 /** Korean reason of an `unchecked` quote (citations.detail, PLAN_M2 3.3 uncheckedReason). */
 export const UNCHECKED_TEXT: Record<UncheckedReason, { chip: string; title: string }> = {
+  uploaded_pdf: { chip: '업로드 PDF · 대조 제한', title: '업로드 PDF에서는 인용 원문을 검증하지 않습니다' },
   work_budget: { chip: '작업량 초과', title: '대조 시간 한도' },
   quote_too_long: { chip: '인용이 너무 김', title: '인용이 너무 김' },
   text_too_long: { chip: '논문이 너무 김', title: '논문이 너무 김' },
@@ -190,6 +194,7 @@ export function EqRefChip({ ordinal, text }: { ordinal: number; text: string }) 
   const { phase, citations } = useContext(SpContext);
   const structure = useContext(StructureContext);
   const openEquation = useContext(StudyPathLinkContext);
+  const uploaded = useContext(UploadedPaperContext);
   const c = citations.get(ordinal);
   const { jump, notLocated } = useJump(c);
   const eqJump = useEquationJump();
@@ -242,6 +247,7 @@ export function EqRefChip({ ordinal, text }: { ordinal: number; text: string }) 
         </>
       );
     case 'unindexed': {
+      if (uploaded) return <span className={neutral} title="업로드 PDF에서는 식 번호를 대조하지 않습니다">{name} · 번호 미확인</span>;
       const one = c.eqNumber !== undefined ? equationByNumber(structure, c.eqNumber) : null;
       return (
         <>

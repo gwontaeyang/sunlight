@@ -17,14 +17,14 @@ import type { CardItemDto, PaperCardDto } from '@study-paper/shared/contracts/ap
 import type { BlockError } from '@study-paper/shared/contracts/blocks';
 import type { Citation, GroundingLabel, PaperCardKind, ParsedAnswer, ParsedBlocks } from '@study-paper/shared/contracts/domain';
 import { LlmErrorCode, type TaskId } from '@study-paper/shared/contracts/tasks';
-import { MAX_ANSWER_WORK, WorkBudget, type PageTextLike } from '@study-paper/shared/anchor/matchQuote';
+import { MAX_ANSWER_WORK, WorkBudget } from '@study-paper/shared/anchor/matchQuote';
 import { validateBlocks, type ValidatedItem } from '@study-paper/shared/markup/blockSchemas';
 import { parseAnswer } from '@study-paper/shared/markup/parseAnswer';
 import { ISSUE_INPUT_TOO_LONG, parseBlocks, SP_BLOCKS_INPUT_MAX_CHARS } from '@study-paper/shared/markup/parseBlocks';
 import type { Db } from '../db/client';
 import { llmCalls, paperCardItems, paperCards, papers } from '../db/schema';
 import { HttpError } from '../deps';
-import { resolveCitations, type EquationIndexRow } from '../llm/citations';
+import { resolveCitations, type EquationIndexRow, type GroundingPages } from '../llm/citations';
 import { headingIssues } from '../llm/headings';
 import { readCitations, writeCitations } from '../llm/citationStore';
 import type { RunStartRows, RunTx } from '../llm/runContract';
@@ -131,7 +131,7 @@ function parseSummary(text: string): ParsedAnswer | null {
  * Parses, validates and matches a card output. Every item shares ONE WorkBudget (PLAN_M2 3.4 rule 4: one card = one
  * MAX_ANSWER_WORK). An invalid SP-Blocks output → {ok:false} (repairable unless the input was too long to parse).
  */
-export function prepareCard(task: TaskId, text: string, pages: readonly PageTextLike[], index: readonly EquationIndexRow[]): PreparedCard {
+export function prepareCard(task: TaskId, text: string, pages: GroundingPages, index: readonly EquationIndexRow[]): PreparedCard {
   const budget = new WorkBudget(MAX_ANSWER_WORK);
   if (task === 'summary') {
     const parsed = parseSummary(text);

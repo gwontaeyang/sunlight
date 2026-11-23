@@ -105,7 +105,7 @@ export const PaperStateDto = z.object({ readable: z.boolean(), contextReady: z.b
  * - context_not_ready: the AI index (supplement) is not ready yet
  * - text_mode_pages / text_mode_bytes: contextMode 'text' because of the page count / the PDF size
  */
-export const AiUnavailableReason = z.enum(['context_not_ready', 'text_mode_pages', 'text_mode_bytes']);
+export const AiUnavailableReason = z.enum(['context_not_ready', 'text_mode_pages', 'text_mode_bytes', 'upload_no_text']);
 export const AiAvailabilityDto = z.object({ available: z.boolean(), reason: AiUnavailableReason.nullable() });
 export const PaperSummaryDto = z.object({
   id: IdSchema,

@@ -100,15 +100,15 @@ export function ThemeSwitch({ rail = false }: { rail?: boolean }) {
   return (
     <div role="group" aria-label="화면 테마" className={`flex gap-[3px] rounded-full border border-sl-edge p-[3px] ${rail ? 'mt-auto mb-3 flex-col' : ''}`}>
       {(['light', 'dark'] as const).map((mode) => {
-        const label = mode === 'light' ? '주간' : '야간';
+        const label = mode === 'light' ? 'Light' : 'Dark';
         return (
           <button
             key={mode}
             type="button"
             data-testid={`rd-theme-${mode}`}
             aria-pressed={theme === mode}
-            aria-label={`${label} 화면`}
-            title={`${label} 화면`}
+            aria-label={label}
+            title={label}
             className={`inline-flex h-[29px] items-center justify-center gap-1 rounded-full border text-sl-label ${rail ? 'w-[29px]' : 'px-2.5'} ${theme === mode ? 'border-sl-accent bg-sl-accent-soft font-semibold text-sl-accent' : 'border-transparent text-sl-muted hover:bg-sl-subtle'}`}
             onClick={() => choose(mode)}
           >

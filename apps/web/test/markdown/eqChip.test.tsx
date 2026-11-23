@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EquationDto, StructureResponse } from '@study-paper/shared/contracts/api';
 import type { Citation } from '@study-paper/shared/contracts/domain';
-import { StructureContext } from '../../src/markdown/chips';
+import { StructureContext, UploadedPaperContext } from '../../src/markdown/chips';
 import { pairStored, StoredMarkup } from '../../src/markdown/renderStored';
 import { useReaderStore, type JumpResult } from '../../src/state/readerStore';
 
@@ -35,6 +35,14 @@ beforeEach(() => {
 });
 
 describe('EqRefChip', () => {
+  it('renders an uploaded PDF equation number without a jump action or a verified chip', () => {
+    const pair = pairStored('<eq n="2"/> [[P]]', [eqc(1, '2', 'unindexed')]);
+    render(<UploadedPaperContext.Provider value={true}><StoredMarkup {...pair} /></UploadedPaperContext.Provider>);
+    expect(screen.getByText('식 (2) · 번호 미확인')).toBeTruthy();
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByTestId('sp-chip')).toBeNull();
+    expect(screen.getByTestId('sp-badge').dataset.status).toBe('p-unverified');
+  });
   it('shows the five states', () => {
     show('<eq n="1"/> <eq n="2"/> <eq n="3"/> <eq n="4"/> <eq n="5"/>', [
       eqc(1, '1', 'resolved', { equationId: 'e1', latex: LATEX, katexOk: true }),

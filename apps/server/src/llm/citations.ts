@@ -71,7 +71,15 @@ export function equationRowsByKey(rows: readonly EquationIndexRow[]): Map<string
 /** The contracts' one equation-number normalization, re-exported for this module's importers; compare with eqNumberKey. */
 export { normalizeEqNumber };
 
-export function resolveCitations(parsed: ParsedAnswer, pages: readonly PageTextLike[], equations: readonly EquationIndexRow[], opts: ResolveOptions = {}): Citation[] {
+/** null means exact source verification is unavailable for this paper, even if its PDF yielded text. */
+export type GroundingPages = readonly PageTextLike[] | null;
+
+export function resolveCitations(parsed: ParsedAnswer, pages: GroundingPages, equations: readonly EquationIndexRow[], opts: ResolveOptions = {}): Citation[] {
+  if (pages === null) {
+    return parsed.citations.map((c): Citation => c.kind === 'quote'
+      ? { ordinal: c.ordinal, kind: 'quote', quote: c.quote ?? '', status: 'unchecked', uncheckedReason: 'uploaded_pdf', score: 0 }
+      : { ordinal: c.ordinal, kind: 'equation', eqNumber: c.eqNumber ?? '', status: 'unindexed', score: 0 });
+  }
   const pageHint = opts.pageHint !== undefined && pages.some((p) => p.page === opts.pageHint) ? opts.pageHint : undefined;
   // One work budget for the whole answer (review N3): exact + fuzzy matching of all its quotes; what does not fit
   // is `unchecked` (shared/anchor/matchQuote.ts header).

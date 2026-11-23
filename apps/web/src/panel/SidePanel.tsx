@@ -96,7 +96,7 @@ function loadLayout(): { width: number; hidden: boolean } {
   }
 }
 
-export function SidePanel({ paperId }: { paperId: string }) {
+export function SidePanel({ paperId, uploaded = false, textExcerpts = false }: { paperId: string; uploaded?: boolean; textExcerpts?: boolean }) {
   const [tab, setTab] = useState<Tab>('ai');
   const [layout, setLayout] = useState(loadLayout);
   // nonce: one per focus request, so the same target asked for again is scrolled to again.
@@ -218,20 +218,26 @@ export function SidePanel({ paperId }: { paperId: string }) {
               <HighlightsTab paperId={paperId} focusHighlightId={focus?.tab === 'highlights' ? (focus.highlightId ?? null) : null} focusNoteId={focus?.tab === 'highlights' ? (focus.noteId ?? null) : null} focusNonce={focus?.nonce ?? 1} />
             </div>
             <div className={`flex min-h-0 flex-1 flex-col px-4 py-3 ${tab === 'cards' ? '' : 'hidden'}`}>
-              <CardsTab paperId={paperId} />
+              <CardsTab paperId={paperId} uploaded={uploaded} />
             </div>
             <div className={`flex min-h-0 flex-1 flex-col px-4 py-3 ${tab === 'equations' ? '' : 'hidden'}`}>
-              <EquationsTab paperId={paperId} focusEquationId={focus?.tab === 'equations' ? (focus.equationId ?? null) : null} focusNonce={focus?.nonce ?? 1} />
+              {uploaded ? (
+                <p data-testid="rd-upload-equation-limit" className="text-sl-reading text-sl-body">
+                  업로드 PDF에는 원본 LaTeX 색인이 없어 수식 깊이 읽기가 제한됩니다. 수식 주변의 글을 선택해 설명을 요청할 수 있습니다.
+                </p>
+              ) : <EquationsTab paperId={paperId} focusEquationId={focus?.tab === 'equations' ? (focus.equationId ?? null) : null} focusNonce={focus?.nonce ?? 1} />}
             </div>
             <div className={`flex min-h-0 flex-1 flex-col px-4 py-3 ${tab === 'references' ? '' : 'hidden'}`}>
-              <ReferencesTab paperId={paperId} focusOrdinal={focus?.tab === 'references' ? (focus.referenceOrdinal ?? null) : null} focusNonce={focus?.nonce ?? 1} />
+              {uploaded ? (
+                <p className="text-sl-reading text-sl-body">이 PDF의 참고문헌은 자동으로 색인되지 않습니다. 논문 끝의 참고문헌 목록에서 확인하세요.</p>
+              ) : <ReferencesTab paperId={paperId} focusOrdinal={focus?.tab === 'references' ? (focus.referenceOrdinal ?? null) : null} focusNonce={focus?.nonce ?? 1} />}
             </div>
             <div className={`flex min-h-0 flex-1 flex-col px-4 py-3 ${tab === 'glossary' ? '' : 'hidden'}`}>
               <GlossaryTab paperId={paperId} />
             </div>
           </StructureContext.Provider>
           <div data-testid="grounding-notice" className="shrink-0 border-t border-sl-line px-4 py-2.5 text-sl-label text-sl-muted">
-            {GROUNDING_NOTICE}
+            {uploaded ? <span data-testid="rd-upload-evidence-note">{textExcerpts && '이 크기의 PDF는 추출한 글의 일부만 AI에 전달합니다. '}업로드 PDF에서는 인용 원문을 정확히 대조하지 않습니다. 인용문과 식 번호는 PDF에서 직접 확인하세요.</span> : GROUNDING_NOTICE}
           </div>
         </div>
       </div>

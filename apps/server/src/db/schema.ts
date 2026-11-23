@@ -42,7 +42,7 @@ export const papers = sqliteTable(
     readableAt: integer('readableAt'),
     contextReadyAt: integer('contextReadyAt'),
     structureReadyAt: integer('structureReadyAt'),
-    structureSource: text('structureSource', { enum: ['latexml', 'pdf-outline', 'none'] }),
+    structureSource: text('structureSource', { enum: ['latexml', 'pdf-outline', 'pdf-inferred', 'none'] }),
     contextMode: text('contextMode', { enum: ['pdf', 'text'] }),
     pageCount: integer('pageCount'),
     pdfSha256: text('pdfSha256'),

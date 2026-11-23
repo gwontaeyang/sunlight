@@ -56,7 +56,7 @@ export interface WrittenFile {
   bytes: number;
 }
 
-function fsyncDir(dir: string): void {
+export function fsyncDir(dir: string): void {
   try {
     const fd = openSync(dir, 'r');
     try {

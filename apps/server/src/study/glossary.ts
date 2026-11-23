@@ -16,15 +16,15 @@ import { and, asc, eq } from 'drizzle-orm';
 import type { GlossaryTermDto } from '@study-paper/shared/contracts/api';
 import type { BlockError } from '@study-paper/shared/contracts/blocks';
 import { normalizeTerm, type Citation, type GlossaryOrigin, type ParsedBlocks } from '@study-paper/shared/contracts/domain';
-import { MAX_ANSWER_WORK, WorkBudget, type PageTextLike } from '@study-paper/shared/anchor/matchQuote';
+import { MAX_ANSWER_WORK, WorkBudget } from '@study-paper/shared/anchor/matchQuote';
 import { validateBlocks } from '@study-paper/shared/markup/blockSchemas';
 import { parseAnswer } from '@study-paper/shared/markup/parseAnswer';
 import { ISSUE_INPUT_TOO_LONG, parseBlocks } from '@study-paper/shared/markup/parseBlocks';
 import type { Db } from '../db/client';
-import { glossaryTerms, llmCalls, messages, pageTexts, papers, threads } from '../db/schema';
+import { glossaryTerms, llmCalls, messages, papers, threads } from '../db/schema';
 import { HttpError, notFound } from '../deps';
-import { resolveCitations, type EquationIndexRow } from '../llm/citations';
-import { equationIndex, readCitations, writeCitations } from '../llm/citationStore';
+import { resolveCitations, type EquationIndexRow, type GroundingPages } from '../llm/citations';
+import { equationIndex, groundingPages, readCitations, writeCitations } from '../llm/citationStore';
 import type { RunTx } from '../llm/runContract';
 import { suggestionAvailable } from '../resultRetention';
 
@@ -39,7 +39,7 @@ export function defineIdentity(paperId: string, body: { term: string; selection?
 export type PreparedSuggestion = { ok: true; parsed: ParsedBlocks; citations: Citation[] } | { ok: false; errors: BlockError[]; repairable: boolean; parsed: ParsedBlocks };
 
 /** Parses + validates a glossary_define output against the requested term and matches the definition's citations. */
-export function prepareSuggestion(text: string, requestedTerm: string, pages: readonly PageTextLike[], index: readonly EquationIndexRow[]): PreparedSuggestion {
+export function prepareSuggestion(text: string, requestedTerm: string, pages: GroundingPages, index: readonly EquationIndexRow[]): PreparedSuggestion {
   const parsed = parseBlocks(text, 'glossary_define');
   const v = validateBlocks('glossary_define', parsed, { requestedTerm });
   if (!v.ok) return { ok: false, errors: v.errors, repairable: !parsed.issues.includes(ISSUE_INPUT_TOO_LONG), parsed };
@@ -95,7 +95,7 @@ export function matchDefinition(db: Reader, paperId: string, definitionKo: strin
   if (!definitionKo) return [];
   const parsed = parseAnswer(definitionKo, { final: true });
   if (parsed.citations.length === 0) return [];
-  const pages = db.select({ page: pageTexts.page, text: pageTexts.text }).from(pageTexts).where(eq(pageTexts.paperId, paperId)).orderBy(asc(pageTexts.page)).all();
+  const pages = groundingPages(db, paperId);
   return resolveCitations(parsed, pages, equationIndex(db, paperId), { budget: new WorkBudget(MAX_ANSWER_WORK) });
 }
 

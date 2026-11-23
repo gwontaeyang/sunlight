@@ -49,7 +49,7 @@ export const SUPPLEMENT_CAPS = {
 } as const;
 
 export interface SupplementIndexInput {
-  meta: { title: string; authors: string[]; arxivId: string; arxivVersion: number; year: number | null; primaryCategory: string | null };
+  meta: { title: string; authors: string[]; arxivId: string | null; arxivVersion: number | null; year: number | null; primaryCategory: string | null };
   /** Document order. */
   sections: { htmlId: string | null; number: string | null; title: string }[];
   /** Numbered equations only; latex = latexNormalize output as is (independent of KaTeX results). */
@@ -97,7 +97,7 @@ export function serializeSupplementV2(input: SupplementIndexInput): SerializedSu
   const metadata = [
     `title: ${value(m.title, C.titleChars, cut)}`,
     `authors: ${shownAuthors.join('; ')}${moreAuthors > 0 ? ` … (+${moreAuthors})` : ''}`,
-    `arxiv: ${value(m.arxivId, C.arxivIdChars, cut)}v${Number.isFinite(m.arxivVersion) ? Math.trunc(m.arxivVersion) : 0}`,
+    m.arxivId === null ? 'source: upload' : `arxiv: ${value(m.arxivId, C.arxivIdChars, cut)}v${m.arxivVersion !== null && Number.isFinite(m.arxivVersion) ? Math.trunc(m.arxivVersion) : 0}`,
     `year: ${m.year === null || !Number.isFinite(m.year) ? 'unknown' : Math.trunc(m.year)}`,
     `category: ${m.primaryCategory ? value(m.primaryCategory, C.categoryChars, cut) : 'unknown'}`,
   ];

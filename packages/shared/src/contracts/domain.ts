@@ -18,7 +18,12 @@ export const PageNumberSchema = z.number().int().min(1);
 export const PaperSource = z.enum(['arxiv', 'upload']);
 export const PaperStatus = z.enum(['inbox', 'reading', 'done']);
 export const IngestStatus = z.enum(['running', 'done', 'failed', 'interrupted']);
-export const StructureSource = z.enum(['latexml', 'pdf-outline', 'none']);
+export const StructureSource = z.enum(['latexml', 'pdf-outline', 'pdf-inferred', 'none']);
+/** Older imports may have both an uploaded PDF and a verified LaTeXML source. */
+export function isPdfOnlyUpload(source: string | undefined, structureSource: string | null | undefined): boolean {
+  return source === 'upload' && structureSource !== 'latexml';
+}
+
 export const ContextMode = z.enum(['pdf', 'text']);
 export const PaperReadiness = z.enum(['readable', 'context_ready', 'structure_ready']);
 export const FileKind = z.enum(['pdf', 'html', 'supplement', 'capture']);
@@ -245,7 +250,7 @@ export const STUDY_PATH_MAX_CHECKS = 32;
 /** Max candidates attached to an ambiguous equation reference (PLAN_M2 3.3). */
 export const EQ_CANDIDATES_MAX = 8;
 /** Why a quote stayed `unchecked` (citations.detail, PLAN_M2 5 "unchecked 이유 미저장"). */
-export const UncheckedReason = z.enum(['work_budget', 'quote_too_long', 'text_too_long']);
+export const UncheckedReason = z.enum(['work_budget', 'quote_too_long', 'text_too_long', 'uploaded_pdf']);
 export type UncheckedReason = z.infer<typeof UncheckedReason>;
 export const EqCandidateSchema = z.object({ equationId: IdSchema, sectionNumber: z.string().nullable(), pdfPage: PageNumberSchema.nullable() });
 export type EqCandidate = z.infer<typeof EqCandidateSchema>;

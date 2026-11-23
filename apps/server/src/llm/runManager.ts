@@ -26,11 +26,11 @@
 //   attached only while its paper is not tombstoned and its owner row exists (else result_deleted — B-CX-1).
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { and, asc, desc, eq, gte, inArray, isNull, ne } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, ne } from 'drizzle-orm';
 import type { BlockError } from '@study-paper/shared/contracts/blocks';
 import { formatBlockError } from '@study-paper/shared/contracts/blocks';
 import type { Citation, LlmUsage, MessageStats, ParsedAnswer, ParsedBlocks, RateLimitInfo } from '@study-paper/shared/contracts/domain';
-import { MessageStatsSchema, RateLimitInfoSchema } from '@study-paper/shared/contracts/domain';
+import { isPdfOnlyUpload, MessageStatsSchema, RateLimitInfoSchema } from '@study-paper/shared/contracts/domain';
 import type { RunSseEvent, SseData } from '@study-paper/shared/contracts/sse';
 import {
   DEFAULT_CONCURRENCY,
@@ -51,7 +51,7 @@ import {
 import { reportedErrors } from '@study-paper/shared/markup/blockSchemas';
 import { parseAnswer } from '@study-paper/shared/markup/parseAnswer';
 import type { Db } from '../db/client';
-import { llmCalls, messages, pageTexts, paperCards, papers, settings, threads } from '../db/schema';
+import { llmCalls, messages, paperCards, papers, settings, threads } from '../db/schema';
 import { HttpError } from '../deps';
 import type { Lifecycle } from '../lifecycle';
 import type { DataPaths } from '../paths';
@@ -64,7 +64,7 @@ import type { ContentBlock, LlmAdapter, LlmTimeouts } from './adapter';
 import { ClaudeCliAdapter, isRetryable, type CliErrorEvent, type CliResultEvent } from './claudeCli';
 import { computeStats, resolveCitations } from './citations';
 import { headingIssues } from './headings';
-import { equationIndex, readCitations as readOwnerCitations, writeCitations } from './citationStore';
+import { equationIndex, groundingPages, readCitations as readOwnerCitations, writeCitations } from './citationStore';
 import { ContextError, loadPaperContext, prefixFingerprint, sha256 } from './paperContext';
 import { QueueError, RunQueue, type Slot } from './queue';
 import type { CancelResult, RunHandle, RunProbe, RunRegistry, RunStartRows, RunTaskInput, RunTx } from './runContract';
@@ -338,7 +338,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
         const parsed = term === null ? null : reparseSuggestion(row.resultRaw!, term);
         if (!parsed) return { kind: 'parse_failed' };
         const body = parsed.items.find((i) => i.tag === 'term')?.body ?? '';
-        const cites = row.paperId ? resolveCitations(parseAnswer(body, { final: true }), pagesOf(row.paperId), equationIndex(db, row.paperId)) : [];
+        const cites = row.paperId ? resolveCitations(parseAnswer(body, { final: true }), groundingPages(db, row.paperId), equationIndex(db, row.paperId)) : [];
         return { kind: 'done', data: { text: row.resultRaw!, parsed, citations: cites, stats: null } };
       }
       if (!alive) return { kind: 'deleted' };
@@ -522,7 +522,6 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
     return null;
   }
 
-  const pagesOf = (paperId: string) => db.select({ page: pageTexts.page, text: pageTexts.text }).from(pageTexts).where(eq(pageTexts.paperId, paperId)).orderBy(asc(pageTexts.page)).all();
 
   // ---------------------------------------------------------------------------------------------------------
   const runTask = (input: RunTaskRequest): RunHandle => {
@@ -531,6 +530,10 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
     if (existing) return existing;
 
     const runId = randomUUID();
+    if (input.task === 'equation_deep' && input.paperId) {
+      const owner = db.select({ source: papers.source, structureSource: papers.structureSource }).from(papers).where(eq(papers.id, input.paperId)).get();
+      if (owner && isPdfOnlyUpload(owner.source, owner.structureSource)) throw new HttpError(400, 'validation', 'uploaded PDFs have no indexed LaTeX equations');
+    }
     const selection = deps.backends?.select(input.task);
     const model = selection?.model ?? resolveModel(input.task);
     // The one effort decision of this run (PLAN_M2 D12): row, adapter request and run.started use this value.
@@ -822,11 +825,11 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
     const spec = TASK_SPECS[input.task];
     const paperId = input.paperId;
     if (run.sink === 'card') {
-      const r = prepareCard(input.task, text, paperId ? pagesOf(paperId) : [], paperId ? equationIndex(db, paperId) : []);
+      const r = prepareCard(input.task, text, paperId ? groundingPages(db, paperId) : [], paperId ? equationIndex(db, paperId) : []);
       return r.ok ? { ok: true, prepared: { kind: 'card', parsed: r.parsed, items: r.items } } : { ok: false, errors: r.errors, repairable: r.repairable };
     }
     if (run.sink === 'suggestion') {
-      const r = prepareSuggestion(text, input.inputs.term ?? '', paperId ? pagesOf(paperId) : [], paperId ? equationIndex(db, paperId) : []);
+      const r = prepareSuggestion(text, input.inputs.term ?? '', paperId ? groundingPages(db, paperId) : [], paperId ? equationIndex(db, paperId) : []);
       return r.ok ? { ok: true, prepared: { kind: 'suggestion', parsed: r.parsed, cites: r.citations } } : { ok: false, errors: r.errors, repairable: r.repairable };
     }
     if (run.sink === 'study_path') {
@@ -834,7 +837,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
       const parts = splitStudyPath(text);
       if (!parts.complete || !hasStudyExamples(parts.stages[4]!.body, input.inputs.codeLanguage)) return { ok: false, errors: [], repairable: false };
       const parsed = parseAnswer(text, { final: true });
-      const cites = resolveCitations(parsed, pagesOf(paperId), equationIndex(db, paperId));
+      const cites = resolveCitations(parsed, groundingPages(db, paperId), equationIndex(db, paperId));
       if (!studyPathCitations(text, cites)) return { ok: false, errors: [], repairable: false };
       return { ok: true, prepared: { kind: 'study_path', parsed, cites, stats: computeStats(parsed, cites), checkCount: parts.checklist.length } };
     }
@@ -842,7 +845,7 @@ export function createRunManager(deps: RunManagerDeps): { runTask: (input: RunTa
     let cites: Citation[] = [];
     let stats: MessageStats | null = null;
     if (parsed && paperId) {
-      cites = resolveCitations(parsed, pagesOf(paperId), equationIndex(db, paperId), run.pageHint !== undefined ? { pageHint: run.pageHint } : {});
+      cites = resolveCitations(parsed, groundingPages(db, paperId), equationIndex(db, paperId), run.pageHint !== undefined ? { pageHint: run.pageHint } : {});
       stats = computeStats(parsed, cites);
     }
     return { ok: true, prepared: { kind: 'message', parsed, cites, stats } };

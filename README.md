@@ -28,11 +28,15 @@ npm run build
 npm run start:user -- --user-data
 ```
 
-Open the library and paste in an arXiv ID. Once the paper is there, you can read, highlight, and take notes before setting up AI. Press **Ctrl+C** in the terminal when you're done. [Open Sunlight](http://127.0.0.1:4310/)
+Open the library and paste in an arXiv ID, or drop a local PDF (up to 50 MiB) beside the import box. Once the paper is there, you can read, highlight, and take notes before setting up AI. Press **Ctrl+C** in the terminal when you're done. [Open Sunlight](http://127.0.0.1:4310/)
 
 If the default port is busy, run `SP_PORT=4595 npm run start:user -- --user-data` and open the alternate address. [Open port 4595](http://127.0.0.1:4595/)
 
 ## Read a paper
+
+For a local PDF, Sunlight takes the title from its metadata or filename. You can edit it in the library. Bookmarks become the table of contents. If the PDF has no bookmarks, Sunlight looks for headings in the text layout. An image-only scan may have no outline or selectable text.
+
+You can ask about a passage, translate it, make cards or follow a Study path. For a PDF without a LaTeX source, quotes stay unverified and equation deep reading is unavailable. Large documents use sampled text for AI context.
 
 Say an equation uses a symbol you don't recognize. Open the notation cards beside the PDF and look up the symbol. If the next step depends on an assumption, open the assumption cards. You can also jump to an indexed equation or check which paper a reference points to.
 
@@ -54,7 +58,7 @@ Save a monthly USD cap before the first API question. The form suggests $20. Set
 
 The server listens only on this computer. PDFs, notes, and the SQLite database stay in `${XDG_DATA_HOME:-~/.local/share}/study_paper/`. Next to it are `study_paper-config/` for optional settings and `study_paper-secrets/` for the key. The key file is readable only by your OS account (0600), inside a private directory (0700). Study-data backups exclude it.
 
-Importing a paper contacts arXiv. When you ask for AI help, your chosen provider receives what the task needs. That can include your question, the paper or its text, and an image you selected.
+Importing by ID contacts arXiv. Dropping a PDF into the library stays local. When you ask for AI help, your chosen provider receives what the task needs. That can include your question, the paper or its text, and an image you selected.
 
 ## Development
 

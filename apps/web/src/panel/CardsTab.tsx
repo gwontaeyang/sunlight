@@ -532,7 +532,7 @@ function FailedCard({ card }: { card: PaperCardDto }) {
   );
 }
 
-export function CardsTab({ paperId }: { paperId: string }) {
+export function CardsTab({ paperId, uploaded = false }: { paperId: string; uploaded?: boolean }) {
   const client = usePanelApi();
   const contextReady = useReaderStore((s) => s.paperState.contextReady);
   const q = useQuery({ queryKey: qk.cards(paperId), queryFn: () => client.call('cards.list', { params: { id: paperId } }) });
@@ -556,7 +556,7 @@ export function CardsTab({ paperId }: { paperId: string }) {
       {hasData && (
         <p className="mt-auto flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-sl-label text-sl-muted" data-testid="pn-letter-legend" aria-hidden="true">
           <span className="inline-flex items-center gap-1">
-            <ItemLetter badge="grounded_quote" /> 인용 원문에서 찾음
+            <ItemLetter badge={uploaded ? 'unverified' : 'grounded_quote'} /> {uploaded ? '원문 대조 제한' : '인용 원문에서 찾음'}
           </span>
           <span className="inline-flex items-center gap-1">
             <ItemLetter badge="not_stated" /> 명시 없음
