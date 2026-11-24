@@ -74,11 +74,15 @@ Want to implement the method yourself? Open **공부** (Study path) in the reade
 
 ## AI settings
 
-Open **설정** (Settings) from the library or reader. If you're already signed in to the `claude` CLI on this computer, choose **Claude Code 구독** to use your subscription.
+Open **설정** (Settings) from the library or reader to choose how Sunlight reaches Claude. If you are already signed in to the `claude` CLI on this computer, choose **Claude Code 구독** to use your subscription. To use your own Anthropic key instead, follow the three steps below.
 
-To use your own Anthropic inference key, choose **내 Anthropic API key**, paste it into the password field, and click **키 저장**. Click **키 확인** to check model access. That check doesn't generate an answer. You can replace or delete your key here later.
+[![The AI settings screen with three steps marked: choose the API-key backend, save your key, and set a monthly USD cap](docs/screenshots/ai-settings-steps.png)](docs/screenshots/ai-settings-steps.png)
 
-Save a monthly USD cap before the first API question. The form suggests $20. Settings shows subscription tokens, API spending, and amounts held for unfinished requests. If a connection drops before usage arrives, the hold stays in place. This cap covers this installation. Check your Anthropic account for actual charges. We tested the SDK with a simulated provider. Live authentication and billing are unverified.
+1. **Choose the backend.** Under **AI 사용 방식**, select **내 Anthropic API key**.
+2. **Save your key.** Paste your `sk-ant-api03-…` key into the field and click **키 저장**. It is stored only on this computer, and the screen then shows **등록됨 · ••••••••**. Click **키 확인** to confirm model access — that check generates no answer — or **키 삭제** to remove the key.
+3. **Set a monthly cap.** Enter a USD amount under **API 월 상한** and click **상한 저장** ($20 is suggested). You must save a cap before the first API question.
+
+**이번 달 사용량** shows subscription tokens, API spending, and amounts held for unfinished requests; if a connection drops before usage arrives, the hold stays in place. The cap and these estimates cover this installation only — check your Anthropic account for actual charges. We tested the SDK with a simulated provider; live authentication and billing are unverified.
 
 ## Data and privacy
 
