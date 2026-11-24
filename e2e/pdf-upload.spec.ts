@@ -127,7 +127,7 @@ for (const theme of ['light', 'dark'] as const) {
       await id('rd-study-path-open').click();
       await expect(id('rd-upload-study-limit')).toBeVisible();
       await id('rd-study-path-generate').click();
-      await expect(id('rd-study-saved')).toContainText('저장된 학습 흐름');
+      await expect(id('rd-study-saved')).toContainText('저장된 공부 자료');
       await expect(id('rd-study-stage-7')).toHaveCount(1);
       await expect(id('rd-study-path').locator('[data-status="verbatim"], [data-status="p-grounded"], [data-status="resolved"]')).toHaveCount(0);
     } finally {

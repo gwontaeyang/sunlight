@@ -44,7 +44,7 @@ For a difficult passage, select the text and press **E** for an explanation, or 
 
 Before closing the paper, highlight the line you want to revisit or press **N** to leave yourself a note. Save a term in the glossary or mark your reading progress in the outline when you finish a section.
 
-Want to implement the method yourself? Open **학습 흐름** (Study path) in the reader and choose **학습 흐름 만들기**. Work from the earlier method and its limits to the paper’s changes, equations and runnable examples. Check off what you have tried. Reopening the paper keeps your guide and checks. Settings lets you choose C++17 with Eigen or Python for the next guide you generate.
+Want to implement the method yourself? Open **공부** (Study path) in the reader and choose **공부 자료 만들기**. Work from the earlier method and its limits to the paper’s changes, equations and runnable examples. Check off what you have tried. Reopening the paper keeps your guide and checks. Settings lets you choose C++17 with Eigen or Python for the next guide you generate.
 
 ## AI settings
 

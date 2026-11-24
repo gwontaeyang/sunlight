@@ -1,3 +1,4 @@
+import { useStudyProgress } from '../study/StudyRunProvider';
 import { SettingsLink, AiSetupHint, useAiSettings } from '../settings/SettingsPage';
 // /paper/:id layout (PLAN 8.2): Outline · PdfReader · SidePanel (D). Owner C.
 // M3a (PLAN_M3 §4, concept_CD): a grid of the left rail (logo · Library · day / night), the centred top bar (Library ·
@@ -101,6 +102,8 @@ export function ReaderPage({ paperId }: { paperId: string }) {
     setStudyPaper({ id: paperId, open: false });
     studyToggle.current?.focus({ preventScroll: true });
   };
+  const studyRun = useStudyProgress();
+  const progress = studyRun?.paperId === paperId ? studyRun : null;
   const hasProvider = useAiSettings().data?.aiAvailable !== false;
   if (paper.isError) return <div className="p-4 text-red-700">논문을 불러오지 못했습니다: {String((paper.error as Error).message)}</div>;
   const p = paper.data;
@@ -111,13 +114,14 @@ export function ReaderPage({ paperId }: { paperId: string }) {
     <UploadedPaperContext.Provider value={pdfOnly}>
     <div
       className="sl-reader grid h-full bg-sl-surface text-sl-ink"
-      style={{ gridTemplateColumns: 'var(--spacing-sl-rail) auto minmax(0, 1fr) auto var(--spacing-sl-rail)', gridTemplateRows: 'var(--spacing-sl-bar) minmax(0, 1fr)' }}
+      style={{ gridTemplateColumns: 'var(--spacing-sl-rail) auto minmax(0, 1fr) auto var(--spacing-sl-rail)', gridTemplateRows: progress ? 'calc(var(--spacing-sl-bar) + 1.5rem) minmax(0, 1fr)' : 'var(--spacing-sl-bar) minmax(0, 1fr)' }}
       data-testid="rd-reader"
       data-theme-choice={theme}
       data-paper-tone={theme === 'dark' ? tone : 'original'}
     >
       <LeftRail />
-      <header className="col-span-3 col-start-2 row-start-1 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-sl-line bg-sl-surface px-4 text-sl-ui whitespace-nowrap">
+      <header className="col-span-3 col-start-2 row-start-1 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 border-b border-sl-line bg-sl-surface px-4 text-sl-ui whitespace-nowrap"
+        style={progress ? { gridTemplateRows: 'var(--spacing-sl-bar) 1.5rem' } : undefined}>
         <div className="flex min-w-0 items-center gap-2">
           <Link href="/" className="shrink-0 text-sl-muted hover:text-sl-ink">
             ← Library
@@ -131,7 +135,7 @@ export function ReaderPage({ paperId }: { paperId: string }) {
               className={`shrink-0 rounded-sl-control border px-2 py-1 font-semibold ${studyOpen ? 'border-sl-accent bg-sl-accent-soft text-sl-accent' : 'border-sl-edge text-sl-body hover:bg-sl-subtle'}`}
               onClick={() => setStudyPaper({ id: paperId, open: !studyOpen })}
             >
-              학습 흐름
+              공부
             </button>
           )}
         </div>
@@ -189,6 +193,18 @@ export function ReaderPage({ paperId }: { paperId: string }) {
             </div>
           )}
         </div>
+        {progress && (
+          <div className="col-span-3 row-start-2 flex items-center gap-3 self-stretch text-sl-label text-sl-muted">
+            <span data-testid="rd-study-progress-text" id="study-progress-label">
+              단계별 공부 {progress.completed}/7 · {progress.percent}%
+            </span>
+            <div data-testid="rd-study-progress" role="progressbar" aria-labelledby="study-progress-label"
+              aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}
+              className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-sl-subtle">
+              <div className="h-full bg-sl-accent" style={{ width: `${progress.percent}%` }} />
+            </div>
+          </div>
+        )}
       </header>
       {outlineDocked && (
         <aside id="rd-outline-region" className="col-start-2 row-start-2 flex min-h-0 w-sl-outline flex-col border-r border-sl-line bg-sl-surface" data-testid="rd-outline-column">

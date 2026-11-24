@@ -138,7 +138,7 @@ export function SettingsPage() {
                 </select>
               </label>
               <label className="flex flex-wrap items-center justify-between gap-2">
-                <span>학습 흐름의 예시 코드 언어</span>
+                <span>단계별 공부의 예시 코드 언어</span>
                 <select data-testid="rd-study-code-language" className={input}
                   value={selected['study.codeLanguage'] ?? 'cpp17'}
                   onChange={(e) => void patch({ 'study.codeLanguage': e.target.value === 'python' ? 'python' : 'cpp17' })}>

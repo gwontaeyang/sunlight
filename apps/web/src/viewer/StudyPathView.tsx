@@ -7,7 +7,8 @@ import { usePanelApi } from '../panel/panelApi';
 import { equationById, referenceByOrdinal, useStructure } from '../api/structure';
 import { ExternalLink, StructureContext, StudyPathLinkContext } from '../markdown/chips';
 import { StoredMarkup, useStoredPair } from '../markdown/renderStored';
-import { isActive, useRunStream } from '../panel/useRunStream';
+import { isActive } from '../panel/useRunStream';
+import { studyPathKey, usePaperStudyRun } from '../study/StudyRunProvider';
 import { useReaderStore } from '../state/readerStore';
 
 const stageNames = ['문제와 배경', '기존 방법과 한계', '논문이 바꾼 것', '핵심 수식', '구현 가이드', '스스로 확인', '다음에 읽을 것'];
@@ -75,18 +76,18 @@ export function StudyPathView({ paper, uploaded = false, open, onClose, canGener
   const id = paper.id;
   const api = usePanelApi();
   const client = useQueryClient();
-  const key = ['study-path', id];
+  const key = studyPathKey(id);
   const saved = useQuery({
     queryKey: key,
     queryFn: ({ signal }) => api.call('studyPath.get', { params: { id }, signal }),
     enabled: open, staleTime: 0,
   });
   const refresh = () => client.invalidateQueries({ queryKey: key });
-  const run = useRunStream({ client: api, onSettled: () => { void refresh(); } });
+  const run = usePaperStudyRun(id);
   const active = isActive(run.state);
   const result = saved.data?.result;
   const pending = saved.data?.pending;
-  const clickLock = useRef(false);
+  const checkedOnOpen = useRef(false);
   const check = useMutation({
     mutationFn: (body: { runId: string; index: number; checked: boolean }) =>
       api.call('studyPath.check', { params: { id }, body }),
@@ -110,60 +111,71 @@ export function StudyPathView({ paper, uploaded = false, open, onClose, canGener
     () => result && !displayingPreview ? studyPathCitations(result.text, result.citations) : null,
     [result?.text, result?.citations, displayingPreview],
   );
-  const interrupted = run.state.error && (run.state.error.source === 'stream' || run.state.error.source === 'aborted' || run.state.error.code === 'network');
-  const reconnect = !!pending || !!interrupted;
+  const problem = run.state.error;
+  const transportLost = problem?.source === 'stream' || problem?.source === 'aborted' || problem?.code === 'network';
+  const storedAfterDisconnect = transportLost && !!result && result.runId === run.state.runId;
+  const interrupted = transportLost && !storedAfterDisconnect;
+  const reconnect = !!pending || interrupted;
+  const { connect } = run;
+
+  // A fresh page may discover someone else's pending request. Only auto-attach when this app already
+  // owned the interrupted request and GET confirms it is still pending. One attempt per view opening.
+  useEffect(() => {
+    if (!open) { checkedOnOpen.current = false; return; }
+    if (checkedOnOpen.current || saved.isFetching || !saved.isSuccess) return;
+    checkedOnOpen.current = true;
+    if (interrupted && pending && pending.clientRequestId === run.state.clientRequestId)
+      void connect(id, pending.regenerate, pending.clientRequestId);
+  }, [open, saved.isFetching, saved.isSuccess, interrupted, pending, run.state.clientRequestId, id, connect]);
+
   async function generate() {
-    if (clickLock.current || active || !saved.data) return;
-    clickLock.current = true;
-    try {
-      const req = { route: 'studyPath.generate', params: { id }, body: { regenerate: pending?.regenerate ?? Boolean(result) } } as const;
-      if (pending) await run.attach(req, pending.clientRequestId);
-      else if (interrupted) await run.retry();
-      else if (canGenerate) await run.start(req);
-    } finally {
-      clickLock.current = false;
-    }
+    if (active || run.busyElsewhere || !saved.data) return;
+    if (pending) await connect(id, pending.regenerate, pending.clientRequestId);
+    else if (interrupted && run.request && run.state.clientRequestId)
+      await connect(id, !!run.request.body.regenerate, run.state.clientRequestId);
+    else if (canGenerate) await connect(id, Boolean(result));
   }
   return (
-    <section hidden={!open} aria-label="논문 학습 흐름" data-testid="rd-study-path"
+    <section hidden={!open} aria-label="단계별 논문 공부" data-testid="rd-study-path"
       className="absolute inset-0 z-20 overflow-auto overscroll-contain bg-sl-canvas text-sl-body">
       <div className="mx-auto max-w-3xl px-3 py-4 sm:px-6">
         <div className="rounded-sl-card border border-sl-line bg-sl-surface px-4 py-5 sm:px-7 sm:py-6">
           <header className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 tabIndex={-1} ref={heading} className="text-sl-title font-semibold text-sl-ink outline-none">논문 학습 흐름</h2>
+              <h2 tabIndex={-1} ref={heading} className="text-sl-title font-semibold text-sl-ink outline-none">단계별 논문 공부</h2>
               <p className="mt-1 break-words text-sl-ui text-sl-muted">{paper.title}</p>
             </div>
             <button type="button" data-testid="rd-study-path-close" className={control} onClick={onClose}>PDF로</button>
           </header>
 
           {uploaded && <p className="mb-4 rounded-sl-control border border-sl-line bg-sl-subtle p-3 text-sl-ui text-sl-muted" data-testid="rd-upload-study-limit">
-            업로드 PDF의 학습 흐름은 원문 인용과 식 번호를 검증하지 않습니다. 설명과 수식은 PDF를 함께 보며 확인하세요.
+            업로드 PDF의 공부 자료는 원문 인용과 식 번호를 검증하지 않습니다. 설명과 수식은 PDF를 함께 보며 확인하세요.
           </p>}
-          {saved.isPending && <p role="status">저장한 학습 흐름을 불러오는 중입니다.</p>}
-          {saved.isError && <p role="alert">학습 흐름을 불러오지 못했습니다. <button className={control} onClick={() => void saved.refetch()}>다시 불러오기</button></p>}
+          {saved.isPending && <p role="status">저장한 공부 자료를 불러오는 중입니다.</p>}
+          {saved.isError && <p role="alert">공부 자료를 불러오지 못했습니다. <button className={control} onClick={() => void saved.refetch()}>다시 불러오기</button></p>}
           {saved.data && (
             <div className="mb-4 space-y-3">
               {!result && !active && <p className="text-sl-reading">기존 방법에서 출발해 논문의 수식과 구현 예시까지 차례로 읽어 보세요.</p>}
               {result && !displayingPreview && (
                 <p data-testid="rd-study-saved" className="text-sl-ui text-sl-muted">
-                  저장된 학습 흐름 · {result.codeLanguage === 'python' ? 'Python' : 'C++17 · Eigen'}
+                  저장된 공부 자료 · {result.codeLanguage === 'python' ? 'Python' : 'C++17 · Eigen'}
                 </p>
               )}
               {active ? (
                 <div className="flex flex-wrap items-center gap-2 text-sl-ui text-sl-muted">
-                  <span role="status">{run.state.phase === 'queued' ? '생성 순서를 기다리는 중입니다.' : '학습 흐름을 작성하고 있습니다.'}</span>
+                  <span role="status">{run.state.phase === 'queued' ? '생성 순서를 기다리는 중입니다.' : '공부 자료를 만들고 있습니다.'}</span>
                   {run.state.runId && <button className={control} type="button" onClick={() => void run.cancel()} disabled={run.state.cancelling}>중단</button>}
                 </div>
               ) : (
                 <button type="button" data-testid={result ? 'rd-study-path-regenerate' : 'rd-study-path-generate'}
-                  className={result ? control : primary} disabled={(!canGenerate && !reconnect) || saved.isFetching || check.isPending}
+                  className={result ? control : primary} disabled={run.busyElsewhere || (!canGenerate && !reconnect) || saved.isFetching || check.isPending}
                   onClick={() => void generate()}>
-                  {reconnect ? '진행 중인 요청 다시 연결' : result ? '다시 만들기' : '학습 흐름 만들기'}
+                  {reconnect ? '진행 중인 요청 다시 연결' : result ? '다시 만들기' : '공부 자료 만들기'}
                 </button>
               )}
+              {run.busyElsewhere && <p className="text-sl-ui text-sl-muted">다른 논문의 공부 자료를 만들고 있습니다.</p>}
               {!canGenerate && <p className="text-sl-ui text-sl-muted">{unavailable}</p>}
-              {run.state.error && <p role="alert" className="text-sl-ui">{run.state.error.message}</p>}
+              {problem && !storedAfterDisconnect && <p role="alert" className="text-sl-ui">{problem.message}</p>}
             </div>
           )}
 

@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { StudyPathDto } from '@study-paper/shared/contracts/api';
+import { StudyRunProvider } from '../../src/study/StudyRunProvider';
 import { StudyPathView } from '../../src/viewer/StudyPathView';
 import { PAPER, renderWithApi, resetReader } from '../panel/panelHarness';
 import { ev } from '../panel/sseFake';
@@ -20,7 +21,7 @@ const text = [
 
 function renderView(dto: StudyPathDto) {
   return renderWithApi(
-    <StudyPathView paper={paper} open onClose={vi.fn()} canGenerate unavailable="" />,
+    <StudyRunProvider><StudyPathView paper={paper} open onClose={vi.fn()} canGenerate unavailable="" /></StudyRunProvider>,
     ({ url, method }) => {
       if (url.endsWith('/structure')) return { status: 200, json: structureFixture() };
       if (url.endsWith('/study-path') && method === 'GET') return { status: 200, json: dto };
@@ -31,7 +32,7 @@ function renderView(dto: StudyPathDto) {
 beforeEach(() => resetReader());
 afterEach(cleanup);
 
-describe('논문 학습 흐름', () => {
+describe('단계별 논문 공부', () => {
   it('보류된 생성 요청은 여는 것만으로 호출하지 않고 다시 연결할 때 저장된 요청 ID로만 보낸다', async () => {
     const { server } = renderView({ result: null, pending: { clientRequestId: requestId, runId: 'run1', regenerate: true, codeLanguage: 'python' } });
     const attach = await screen.findByRole('button', { name: '진행 중인 요청 다시 연결' });

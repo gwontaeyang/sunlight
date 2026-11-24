@@ -14,6 +14,7 @@ import { qk } from '../api/queryKeys';
 import { formatStoredJobError, STEP_LABELS, useJobProgress, type JobProgress } from './jobs';
 import { Icon, Wordmark } from '../ui/icons';
 import { ThemeSwitch } from '../ui/theme';
+import { useStudyProgress } from '../study/StudyRunProvider';
 import { PdfUpload } from './PdfUpload';
 import { UploadPaperTitle } from './UploadPaperTitle';
 import { aiStatus } from './readiness';
@@ -148,6 +149,12 @@ export function LibraryPage() {
   );
 }
 
+function StudyProgressBadge({ paperId }: { paperId: string }) {
+  const progress = useStudyProgress();
+  if (progress?.paperId !== paperId) return null;
+  return <span data-testid="lib-study-progress" className={`${CHIP} ${TONE.busy}`}>공부 생성 중 {progress.percent}%</span>;
+}
+
 function PaperRow({ paper: p, progress, watch }: { paper: PaperSummaryDto; progress?: JobProgress; watch(jobId: string, paperId: string): void }) {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState(false);
@@ -207,6 +214,7 @@ function PaperRow({ paper: p, progress, watch }: { paper: PaperSummaryDto; progr
               <span data-testid="rd-upload-source" className={`${CHIP} border-sl-edge text-sl-muted`}>업로드 PDF</span>
             )}
             <StructureBadge paper={p} />
+            <StudyProgressBadge paperId={p.id} />
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 pt-0.5 text-sl-label">
