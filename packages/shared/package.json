@@ -9,6 +9,7 @@
     "./markup/*": "./src/markup/*.ts",
     "./image/*": "./src/image/*.ts",
     "./latex/*": "./src/latex/*.ts",
+    "./overview": "./src/overview.ts",
     "./study-path": "./src/studyPath.ts",
     "./mock-outputs": "./src/mockOutputs.ts"
   },

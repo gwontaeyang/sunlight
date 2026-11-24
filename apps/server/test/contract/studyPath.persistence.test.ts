@@ -81,7 +81,7 @@ it('upgrades a populated BYOK database once and keeps its pre-study backup reada
     sqlite.prepare("INSERT INTO settings(key,valueJson) VALUES('llm.backend',?), ('llm.economy','true')").run('"api"');
     sqlite.prepare("INSERT INTO llm_calls(runId,task,model,effort,status,acceptedAt) VALUES(?, 'chat','fable','low','ok',1)").run('historical');
     const migration = await migrateWithBackup(sqlite, { backupsDir });
-    expect(migration.applied).toEqual(['0004_study_path']);
+    expect(migration.applied).toEqual(['0004_study_path', '0005_overview']);
     expect(sqlite.prepare('SELECT count(*) AS n FROM study_paths').get()).toEqual({ n: 0 });
     expect(sqlite.prepare('SELECT runId,model FROM llm_calls').all()).toEqual([{ runId: 'historical', model: 'fable' }]);
     expect(readSettings(sqlite)).toMatchObject({ 'llm.backend': 'api', 'llm.economy': true, 'study.codeLanguage': 'cpp17', 'llm.answerLanguage': 'ko' });

@@ -22,6 +22,8 @@ export type RunRequest =
   | { route: 'messages.create'; params: ApiParams<'messages.create'>; body: Omit<PostMessageRequest, 'clientRequestId'> }
   // M2: card generation (background run, survives the tab) and a glossary definition request.
   | { route: 'studyPath.generate'; params: ApiParams<'studyPath.generate'>; body: Omit<ApiBody<'studyPath.generate'>, 'clientRequestId'> }
+  | { route: 'overview.generate'; params: ApiParams<'overview.generate'>; body: Omit<ApiBody<'overview.generate'>, 'clientRequestId'> }
+  | { route: 'reviewCards.fromSelection'; params: ApiParams<'reviewCards.fromSelection'>; body: Omit<ApiBody<'reviewCards.fromSelection'>, 'clientRequestId'> }
   | { route: 'cards.generate'; params: ApiParams<'cards.generate'>; body: Record<string, never> }
   | { route: 'glossary.define'; params: ApiParams<'glossary.define'>; body: Omit<ApiBody<'glossary.define'>, 'clientRequestId'> };
 
@@ -127,6 +129,8 @@ const AFTER_DISCONNECT: Record<RunRequest['route'], string> = {
   'threads.create': '결과는 thread를 다시 열어 확인하세요',
   'messages.create': '결과는 thread를 다시 열어 확인하세요',
   'studyPath.generate': '단계별 공부를 다시 열면 같은 생성 요청에 연결할 수 있습니다',
+  'overview.generate': '한눈에 요약을 다시 열면 진행 중인 요약이나 저장된 결과를 확인할 수 있습니다',
+  'reviewCards.fromSelection': '다시 연결하여 선택한 구간의 생성 결과를 확인하세요',
   'cards.generate': '생성은 서버에서 계속되고 끝나면 여기에 표시됩니다',
   'glossary.define': '서버가 이 요청을 취소했을 수 있습니다(다시 요청하세요)',
 };

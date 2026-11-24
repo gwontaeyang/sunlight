@@ -49,10 +49,10 @@ const APPENDIX_A: Record<string, [owner: 'A' | 'B' | 'supervisor', milestone: 0 
   'POST /collections': ['A', 4],
   'PATCH /collections/:id': ['A', 4],
   'DELETE /collections/:id': ['A', 4],
-  'GET /review/queue': ['A', 4],
-  'GET /review/stats': ['A', 4],
-  'POST /review/cards/:id/grade': ['A', 4],
-  'POST /review/cards': ['A', 4],
+  'GET /review/queue': ['A', 3],
+  'GET /review/stats': ['A', 3],
+  'POST /review/cards/:id/grade': ['A', 3],
+  'POST /review/cards': ['A', 3],
   'PATCH /review/cards/:id': ['A', 4],
   'DELETE /review/cards/:id': ['A', 4],
   'GET /papers/:id/export.md': ['A', 4],
@@ -77,6 +77,7 @@ const APPENDIX_A: Record<string, [owner: 'A' | 'B' | 'supervisor', milestone: 0 
   'POST /papers/:id/glossary/define': ['B', 2],
   'PATCH /glossary/:id': ['B', 2],
   'DELETE /glossary/:id': ['B', 2],
+  'POST /papers/:id/review-cards/from-selection': ['B', 3],
   'POST /papers/:id/review-cards/generate': ['B', 4],
   'POST /papers/:id/review-cards/accept': ['B', 4],
   'POST /papers/:id/explain-back': ['B', 4],
@@ -84,6 +85,8 @@ const APPENDIX_A: Record<string, [owner: 'A' | 'B' | 'supervisor', milestone: 0 
   'GET /usage/summary': ['B', 3],
   'GET /papers/:id/study-path': ['B', 3],
   'POST /papers/:id/study-path/generate': ['B', 3],
+  'GET /papers/:id/overview': ['B', 3],
+  'POST /papers/:id/overview/generate': ['B', 3],
   'PATCH /papers/:id/study-path/check': ['B', 3],
 };
 
@@ -156,7 +159,7 @@ describe('routes over HTTP (seed DB + MockLlm)', () => {
     const res = await call('GET', '/health');
     expect(res.status).toBe(200);
     const body = (API_SCHEMAS.health as RouteSchemas).response!.parse(JSON.parse(res.text));
-    expect(body).toMatchObject({ ok: true, db: { ok: true, lastMigration: '0004_study_path' }, llm: 'mock' });
+    expect(body).toMatchObject({ ok: true, db: { ok: true, lastMigration: '0005_overview' }, llm: 'mock' });
   });
 
   it('GET /papers and GET /papers/:id match the schemas', async () => {

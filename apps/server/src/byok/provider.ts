@@ -137,7 +137,7 @@ export class ApiProvider {
     const start = Date.now();
     let settled = false;
     try {
-      if (req.jsonSchema) throw new ApiFailure('api_error');
+      if (req.jsonSchema && (req.task !== 'selection_questions' || req.prefix.length > 0)) throw new ApiFailure('api_error');
       const client = this.client(req.runId, generation, model, 'message', signal);
       const stream = await client.messages.create(
         {
@@ -147,7 +147,10 @@ export class ApiProvider {
           service_tier: 'standard_only',
           inference_geo: 'global',
           max_tokens: MAX_OUTPUT,
-          output_config: { effort: req.effort },
+          output_config: {
+            effort: req.effort,
+            ...(req.jsonSchema ? { format: { type: 'json_schema' as const, schema: { ...req.jsonSchema } } } : {}),
+          },
           ...(req.effort === 'high' ? { thinking: { type: 'adaptive' as const } } : {}),
           messages: [{ role: 'user', content: [...req.prefix, ...req.tail] }],
         },

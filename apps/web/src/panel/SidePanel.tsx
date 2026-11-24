@@ -18,6 +18,7 @@ import { isE2e } from '../api/token';
 import { StructureContext } from '../markdown/chips';
 import { useReaderStore, type PanelFocus, type PanelTab } from '../state/readerStore';
 import { AiTab } from './AiTab';
+import { OverviewPanel } from './OverviewPanel';
 import { CardsTab } from './CardsTab';
 import { EquationsTab } from './EquationsTab';
 import { GlossaryTab } from './GlossaryTab';
@@ -96,8 +97,11 @@ function loadLayout(): { width: number; hidden: boolean } {
   }
 }
 
-export function SidePanel({ paperId, uploaded = false, textExcerpts = false }: { paperId: string; uploaded?: boolean; textExcerpts?: boolean }) {
+export function SidePanel({ paperId, uploaded = false, textExcerpts = false, overviewUnavailable }: {
+  paperId: string; uploaded?: boolean; textExcerpts?: boolean; overviewUnavailable?: string;
+}) {
   const [tab, setTab] = useState<Tab>('ai');
+  const [overviewOpen, setOverviewOpen] = useState(false);
   const [layout, setLayout] = useState(loadLayout);
   // nonce: one per focus request, so the same target asked for again is scrolled to again.
   const [focus, setFocus] = useState<(PanelFocus & { nonce: number }) | null>(null);
@@ -111,6 +115,7 @@ export function SidePanel({ paperId, uploaded = false, textExcerpts = false }: {
   // A reader action brings its tab into view (the tab itself consumes the action).
   useEffect(() => {
     if (pendingAction) {
+      setOverviewOpen(false);
       setTab(ACTION_TAB[pendingAction.kind] ?? 'ai');
       setLayout((l) => (l.hidden ? { ...l, hidden: false } : l));
     }
@@ -121,6 +126,7 @@ export function SidePanel({ paperId, uploaded = false, textExcerpts = false }: {
     if (!panelFocus) return;
     const f = consumePanelFocus();
     if (!f) return;
+    if (f.tab === 'ai') setOverviewOpen(false);
     setTab(f.tab);
     setFocus((prev) => ({ ...f, nonce: (prev?.nonce ?? 0) + 1 }));
     setLayout((l) => (l.hidden ? { ...l, hidden: false } : l));
@@ -212,7 +218,15 @@ export function SidePanel({ paperId, uploaded = false, textExcerpts = false }: {
           </div>
           <StructureContext.Provider value={structure.data}>
             <div className={`flex min-h-0 flex-1 flex-col px-4 py-3 ${tab === 'ai' ? '' : 'hidden'}`}>
-              <AiTab paperId={paperId} />
+              <button type="button" data-testid="pn-overview-toggle" aria-expanded={overviewOpen}
+                onClick={() => setOverviewOpen(value => !value)}
+                className="mb-2 flex shrink-0 items-center justify-between rounded-sl-control border border-sl-edge bg-sl-surface px-3 py-1.5 text-left text-sl-ui font-semibold text-sl-ink hover:bg-sl-subtle">
+                논문 한눈에 요약 <span aria-hidden="true">{overviewOpen ? '−' : '+'}</span>
+              </button>
+              {overviewOpen && <OverviewPanel key={paperId} paperId={paperId} uploaded={uploaded} unavailable={overviewUnavailable} />}
+              <div className={overviewOpen || tab !== 'ai' ? 'hidden' : 'flex min-h-0 flex-1 flex-col'}>
+                <AiTab paperId={paperId} />
+              </div>
             </div>
             <div className={`flex min-h-0 flex-1 flex-col px-4 py-3 ${tab === 'highlights' ? '' : 'hidden'}`}>
               <HighlightsTab paperId={paperId} focusHighlightId={focus?.tab === 'highlights' ? (focus.highlightId ?? null) : null} focusNoteId={focus?.tab === 'highlights' ? (focus.noteId ?? null) : null} focusNonce={focus?.nonce ?? 1} />

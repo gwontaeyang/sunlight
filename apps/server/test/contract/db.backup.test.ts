@@ -66,7 +66,7 @@ describe('backup before migration (PLAN 6, db.backup.test)', () => {
     // Original unchanged: rows present, partial DDL rolled back, still 5 applied migrations.
     expect(rowCount(sqlite, `SELECT count(*) AS n FROM papers WHERE id='p-latest'`)).toBe(1);
     expect((sqlite.prepare(`SELECT name FROM pragma_table_info('papers') WHERE name='willRollBack'`).all() as unknown[]).length).toBe(0);
-    expect(rowCount(sqlite, `SELECT count(*) AS n FROM __drizzle_migrations`)).toBe(5);
+    expect(rowCount(sqlite, `SELECT count(*) AS n FROM __drizzle_migrations`)).toBe(6);
     sqlite.close();
 
     // Simulate a damaged DB, then restore.

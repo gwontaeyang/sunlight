@@ -11,8 +11,10 @@ export const TaskId = z.enum([
   'notation_card',
   'assumptions_card',
   'glossary_define',
+  'selection_questions',
   'cards_from_highlights',
   'explain_back_grade',
+  'paper_overview',
   'study_path',
   'pdf_metadata',
 ]);
@@ -66,8 +68,10 @@ export const TASK_SPECS: Record<TaskId, TaskSpec> = {
   notation_card: { id: 'notation_card', context: 'paper', model: 'deepModel', effort: 'high', output: 'sp-blocks', cancelOnDisconnect: false, priority: 'background', totalMs: 600 * s, milestone: 2 },
   assumptions_card: { id: 'assumptions_card', context: 'paper', model: 'deepModel', effort: 'high', output: 'sp-blocks', cancelOnDisconnect: false, priority: 'background', totalMs: 600 * s, milestone: 2 },
   glossary_define: { id: 'glossary_define', context: 'paper', model: 'paperModel', effort: 'low', output: 'sp-blocks', cancelOnDisconnect: true, priority: 'interactive', totalMs: 120 * s, milestone: 2 },
+  selection_questions: { id: 'selection_questions', context: 'local', model: 'sonnet', effort: 'low', output: 'json-schema', cancelOnDisconnect: true, priority: 'interactive', totalMs: 90 * s, milestone: 3 },
   cards_from_highlights: { id: 'cards_from_highlights', context: 'paper', model: 'paperModel', effort: 'high', output: 'sp-blocks', cancelOnDisconnect: false, priority: 'background', totalMs: 300 * s, milestone: 4 },
   explain_back_grade: { id: 'explain_back_grade', context: 'paper', model: 'deepModel', effort: 'high', output: 'sp-blocks', cancelOnDisconnect: true, priority: 'interactive', totalMs: 600 * s, milestone: 4 },
+  paper_overview: { id: 'paper_overview', context: 'paper', model: 'sonnet', effort: 'medium', output: 'sp-markup', cancelOnDisconnect: false, priority: 'background', totalMs: 120 * s, milestone: 3 },
   study_path: { id: 'study_path', context: 'paper', model: 'deepModel', effort: 'high', output: 'sp-markup', cancelOnDisconnect: false, priority: 'background', totalMs: 600 * s, milestone: 3 },
   pdf_metadata: { id: 'pdf_metadata', context: 'none', model: 'haiku', effort: 'low', output: 'json-schema', cancelOnDisconnect: false, priority: 'background', totalMs: 60 * s, milestone: 4 },
 };

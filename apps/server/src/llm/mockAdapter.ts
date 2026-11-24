@@ -82,6 +82,21 @@ export class MockLlmAdapter implements LlmAdapter {
     const o = this.opts.outputs?.[req.task];
     if (o === undefined) {
       const text = readMockOutput(req.task);
+      if (req.task === 'paper_overview') {
+        const tail = req.tail.at(-1);
+        if (tail?.type === 'text' && tail.text.includes('<answer_language trust="app">en</answer_language>')) return readMockFile('paper_overview.en.md');
+      }
+      if (req.task === 'selection_questions') {
+        const tail = req.tail.at(-1);
+        const taskText = tail?.type === 'text' ? tail.text : '';
+        const evidence = unescapeXml(/<selection [^>]*>([\s\S]*?)<\/selection>/.exec(taskText)?.[1] ?? '').slice(0, 250);
+        const english = taskText.includes('<answer_language trust="app">en</answer_language>');
+        const fixture = JSON.parse(text) as { cards: { frontMd: string; backMd: string; evidence: string }[] };
+        return JSON.stringify({ cards: fixture.cards.map((card, i) => ({
+          ...card, frontMd: english ? ['What does this passage describe?', 'How does the passage express this point?'][i] : card.frontMd,
+          backMd: evidence, evidence,
+        })) });
+      }
       if (req.task === 'study_path') {
         const tail = req.tail.at(-1);
         const taskText = tail?.type === 'text' ? tail.text : '';

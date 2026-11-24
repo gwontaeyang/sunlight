@@ -326,7 +326,7 @@ async function paperGet(api: LocalApi, id: string): Promise<PaperGet> {
 async function forward(): Promise<never> {
   const data = resolve(opt['--data']!);
   const pre = resolve(opt['--pre']!);
-  const log = requireServerLog({ env: 'dev', llm: 'mock', network: 'off', data, migrations: ['0002_m2', '0003_api', '0004_study_path'], backup: true });
+  const log = requireServerLog({ env: 'dev', llm: 'mock', network: 'off', data, migrations: ['0002_m2', '0003_api', '0004_study_path', '0005_overview'], backup: true });
   const i5 = JSON.parse(readFileSync(resolve(opt['--structure-eval']!), 'utf8')) as { papers: { paper: string; sections: Record<string, number>; equations: Record<string, number> }[] };
   const gold = JSON.parse(readFileSync(GOLD_FILE, 'utf8')) as Record<string, { sections: GoldItem[]; equations: GoldItem[] }>;
 
@@ -452,7 +452,7 @@ async function forward(): Promise<never> {
 
 async function mutate(): Promise<never> {
   const data = resolve(opt['--data']!);
-  const log = requireServerLog({ env: 'dev', llm: 'mock', network: 'off', data, migrations: ['0002_m2', '0003_api', '0004_study_path'], backup: true });
+  const log = requireServerLog({ env: 'dev', llm: 'mock', network: 'off', data, migrations: ['0002_m2', '0003_api', '0004_study_path', '0005_overview'], backup: true });
   const papers = withLiveDb(data, (db) => all<{ id: string; arxivId: string }>(db, `SELECT id, arxivId FROM papers ORDER BY arxivId`));
   const del = papers.find((p) => p.arxivId === DELETE_ARXIV_ID);
   const keep = papers.find((p) => p.arxivId !== DELETE_ARXIV_ID);

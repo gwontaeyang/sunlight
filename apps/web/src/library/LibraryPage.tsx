@@ -88,7 +88,7 @@ export function LibraryPage() {
     <div className="min-h-full bg-sl-surface text-sl-ink">
       <header className="flex min-h-14 items-center justify-between border-b border-sl-line px-[clamp(18px,5vw,72px)]">
         <Wordmark />
-        <div className="flex items-center gap-2"><AiSetupHint /><SettingsLink /><ThemeSwitch /></div>
+        <div className="flex items-center gap-2"><Link href="/review" data-testid="lib-review" className="rounded-sl-control px-2 py-1.5 text-sl-ui text-sl-accent hover:underline">복습</Link><AiSetupHint /><SettingsLink /><ThemeSwitch /></div>
       </header>
       <main className="mx-auto max-w-[928px] px-6 pt-12 pb-16">
         <div className="mb-5 flex items-baseline gap-3">

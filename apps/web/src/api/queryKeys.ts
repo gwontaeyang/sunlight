@@ -1,6 +1,7 @@
 // TanStack Query keys shared by the viewer (C) and the panels (D). Owner: supervisor.
 // Both sides read and invalidate the same data (e.g. C creates a highlight, D lists it), so keys live here.
 export const qk = {
+  reviewQueue: ['reviewQueue'] as const,
   papers: ['papers'] as const,
   paper: (paperId: string) => ['paper', paperId] as const,
   highlights: (paperId: string) => ['highlights', paperId] as const,

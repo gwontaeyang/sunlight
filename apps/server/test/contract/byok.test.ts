@@ -103,6 +103,22 @@ function response(reason = 'end_turn', stop = true, model: string = API_MODELS.o
   });
 }
 describe('c2 SDK requests and billing', () => {
+  it('sends the selection-question JSON schema to the official SDK without a paper prefix', async () => {
+    const { SELECTION_QUESTIONS_SCHEMA } = await import('../../src/study/selectionQuestions');
+    const text = JSON.stringify({ cards: [{ type: 'why', frontMd: 'Why?', backMd: 'A', evidence: 'A' }] });
+    const bodies: unknown[] = [];
+    const f = await fixture(async (_url, init) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return response('end_turn', true, API_MODELS.sonnet, text);
+    });
+    writeSettings(f.sqlite, { 'llm.monthlyLimitMicroUsd': 20_000_000 });
+    const req: LlmRunRequest = { ...request('questions'), task: 'selection_questions', model: 'sonnet', effort: 'low', prefix: [],
+      jsonSchema: SELECTION_QUESTIONS_SCHEMA, tail: [{ type: 'text', text: 'selection only' }] };
+    const generation = f.secrets.status().generation!;
+    const out = await collect(f.api.adapter(generation, API_MODELS.sonnet).run(req));
+    expect(bodies).toEqual([expect.objectContaining({ model: API_MODELS.sonnet, output_config: { effort: 'low', format: { type: 'json_schema', schema: SELECTION_QUESTIONS_SCHEMA } }, messages: [{ role: 'user', content: req.tail }] })]);
+    expect(out.at(-1)).toMatchObject({ type: 'result', text });
+  });
   it('uses the official stream parser, frozen model, adaptive thinking, unchanged prefix and accounted cache tiers', async () => {
     const calls: Array<{ url: string; init: RequestInit }> = [];
     const f = await fixture(async (url, init) => {
@@ -274,7 +290,7 @@ it('keeps health diagnostics available when stored provider settings cannot be d
     server.deps.sqlite.prepare('INSERT OR REPLACE INTO settings(key,valueJson) VALUES (?,?)').run('llm.backend', damaged);
     const degraded = await health();
     expect(degraded.status).toBe(200);
-    expect(JSON.parse(degraded.text)).toMatchObject({ ok: false, llm: 'mock', db: { ok: false, lastMigration: '0004_study_path' } });
+    expect(JSON.parse(degraded.text)).toMatchObject({ ok: false, llm: 'mock', db: { ok: false, lastMigration: '0005_overview' } });
     expect(JSON.parse(degraded.text)).not.toHaveProperty('backend');
     expect(degraded.text).not.toContain(damaged);
     server.deps.sqlite.prepare('DELETE FROM settings WHERE key=?').run('llm.backend');
@@ -460,7 +476,7 @@ it('upgrades a populated M2 database and verifies the backup retains its origina
   ).run();
   const before = db.prepare('SELECT hash FROM __drizzle_migrations ORDER BY created_at').all();
   const migrated = await migrateWithBackup(db, { backupsDir });
-  expect(migrated.applied).toEqual(['0003_api', '0004_study_path']);
+  expect(migrated.applied).toEqual(['0003_api', '0004_study_path', '0005_overview']);
   expect(db.prepare('SELECT model,inputTokens,backend,executionMode FROM llm_calls WHERE runId=?').get('past')).toEqual({
     model: 'fable',
     inputTokens: 500,

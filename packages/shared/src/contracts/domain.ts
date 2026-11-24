@@ -245,6 +245,7 @@ const QUOTE_STATUSES: readonly string[] = QuoteStatus.options;
 const EQ_STATUSES: readonly string[] = EqRefStatus.options;
 /** Upper bound of a stored equation's LaTeX (equations.latex is cut to this length when stored — PLAN_M2 3.2). */
 export const EQUATION_LATEX_MAX = 4000;
+export const OVERVIEW_MAX_CHARS = 4000;
 export const STUDY_PATH_MAX_CHARS = 64_000;
 export const STUDY_PATH_MAX_CHECKS = 32;
 /** Max candidates attached to an ambiguous equation reference (PLAN_M2 3.3). */

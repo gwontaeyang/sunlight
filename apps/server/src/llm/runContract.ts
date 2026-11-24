@@ -123,6 +123,8 @@ export interface RunStartRows {
 }
 
 export interface RunTaskInput {
+  /** Server-resolved location retained for confirmation, never sent to the model. */
+  reviewSelection?: { page: number; start: number; quote: import('@study-paper/shared/contracts/domain').TextQuoteSelector };
   task: TaskId;
   /** UUID from the client request (rule 1). */
   clientRequestId: string;

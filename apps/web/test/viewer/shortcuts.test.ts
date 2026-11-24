@@ -53,6 +53,7 @@ describe('resolveReaderShortcut', () => {
 
 const M2_KEYS = [
   { key: 't', action: { kind: 'translate' }, needsSelection: true },
+  { key: 'q', action: { kind: 'reviewQuestions' }, needsSelection: true },
   { key: 'T', action: { kind: 'translate' }, needsSelection: true },
   { key: 'c', action: { kind: 'ask' }, needsSelection: false },
   { key: 'n', action: { kind: 'note' }, needsSelection: false },

@@ -10,6 +10,7 @@ export type HighlightColorValue = 1 | 2 | 3 | 4 | 5;
 export type ReaderShortcutAction =
   | { kind: 'explain' }
   | { kind: 'translate' }
+  | { kind: 'reviewQuestions' }
   | { kind: 'ask' }
   | { kind: 'note' }
   | { kind: 'glossary' }
@@ -74,6 +75,7 @@ const ACTION_OF: Record<ShortcutName, Entry> = {
 const PLAIN_KEYS: Record<string, Entry> = (() => {
   const out: Record<string, Entry> = {};
   for (const name of M2_READER_SHORTCUTS) if (name !== 'back') out[READER_SHORTCUTS[name]] = ACTION_OF[name];
+  out.q = { action: { kind: 'reviewQuestions' }, needsSelection: true };
   out[READER_SHORTCUTS.escape] = { action: { kind: 'escape' }, needsSelection: false };
   return out;
 })();

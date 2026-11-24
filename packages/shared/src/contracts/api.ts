@@ -8,6 +8,7 @@ import {
   ContextMode,
   EpochMsSchema,
   EQUATION_LATEX_MAX,
+  OVERVIEW_MAX_CHARS,
   ExplainBackPointStatus,
   FsrsState,
   GlossaryOrigin,
@@ -380,7 +381,24 @@ export const ReviewQueueResponse = z.object({
 });
 export const ReviewStatsResponse = z.object({ dueToday: z.number().int(), newToday: z.number().int(), reviewedToday: z.number().int(), total: z.number().int() });
 export const GradeRequest = z.object({ rating: ReviewRating, expectedReps: z.number().int().nonnegative(), clientRequestId: ClientRequestId });
-export const CreateReviewCardRequest = z.object({ paperId: IdSchema, type: ReviewCardType, frontMd: z.string().min(1).max(8000), backMd: z.string().min(1).max(8000), highlightId: IdSchema.optional(), sectionId: IdSchema.optional() });
+export const SelectionQuestion = z.strictObject({
+  type: ReviewCardType, frontMd: z.string().trim().min(1).max(1000), backMd: z.string().trim().min(1).max(3000),
+  evidence: z.string().min(1).max(8000),
+});
+export type SelectionQuestion = z.infer<typeof SelectionQuestion>;
+export const SelectionQuestions = z.strictObject({ cards: z.array(SelectionQuestion).min(1).max(3) });
+export type SelectionQuestions = z.infer<typeof SelectionQuestions>;
+const SelectionQuestionRequest = TextQuoteSelectorSchema.pick({ prefix: true, suffix: true }).extend({
+  clientRequestId: ClientRequestId, page: PageNumberSchema, selection: TextQuoteSelectorSchema.shape.exact,
+}).strict();
+const ReviewAnchor = z.strictObject({ page: PageNumberSchema, quote: TextQuoteSelectorSchema, rects: z.array(NormRectSchema).min(1).max(500) })
+  .refine((anchor) => anchor.rects.every((rect) => rect.page === anchor.page), { message: 'every rect must be on the selected page' });
+export const CreateReviewCardRequest = z.object({ paperId: IdSchema, type: ReviewCardType, frontMd: z.string().min(1).max(8000), backMd: z.string().min(1).max(8000), highlightId: IdSchema.optional(), sectionId: IdSchema.optional(),
+  runId: IdSchema.optional(), questionIndex: z.number().int().min(0).max(2).optional(), anchor: ReviewAnchor.optional(),
+}).superRefine((v, ctx) => {
+  const fields = [v.runId, v.questionIndex, v.anchor].filter((x) => x !== undefined).length;
+  if (fields !== 0 && fields !== 3) ctx.addIssue({ code: 'custom', message: 'runId, questionIndex and anchor are required together' });
+});
 export const PatchReviewCardRequest = z.object({ frontMd: z.string().min(1).max(8000), backMd: z.string().min(1).max(8000), suspended: z.boolean() }).partial();
 
 export const StudyCodeLanguage = z.enum(['cpp17', 'python']);
@@ -403,7 +421,15 @@ export const StudyPathDto = z.object({
   }).nullable(),
 });
 export type StudyPathDto = z.infer<typeof StudyPathDto>;
-const GenerateStudyPathRequest = z.strictObject({ clientRequestId: ClientRequestId, regenerate: z.boolean().optional() });
+export const OverviewResult = z.object({
+  runId: IdSchema, text: z.string().min(1).max(OVERVIEW_MAX_CHARS), citations: z.array(CitationSchema),
+});
+export const OverviewDto = z.object({
+  result: OverviewResult.nullable(),
+  pending: z.object({ runId: IdSchema, clientRequestId: ClientRequestId, regenerate: z.boolean() }).nullable(),
+});
+export type OverviewDto = z.infer<typeof OverviewDto>;
+const GeneratePaperArtifactRequest = z.strictObject({ clientRequestId: ClientRequestId, regenerate: z.boolean().optional() });
 const CheckStudyPathRequest = z.strictObject({ runId: IdSchema, index: z.number().int().min(0).lt(STUDY_PATH_MAX_CHECKS), checked: z.boolean() });
 
 // Only these user settings may cross the HTTP boundary. The settings table also contains private ingest state.
@@ -685,13 +711,16 @@ export const API_SCHEMAS = {
   'glossary.define': { params: IdParams, body: DefineGlossaryRequest, response: null },
   'glossary.patch': { params: IdParams, body: PatchGlossaryRequest, response: GlossaryTermDto },
   'glossary.delete': { params: IdParams, response: null },
+  'reviewCards.fromSelection': { params: IdParams, body: SelectionQuestionRequest, response: null },
   'reviewCards.generate': { params: IdParams, body: GenerateReviewCardsRequest, response: null },
   'reviewCards.accept': { params: IdParams, body: AcceptReviewCardsRequest, response: AcceptReviewCardsResponse },
   'explainBack.create': { params: IdParams, body: ExplainBackRequest, response: null },
   'explainBack.list': { params: IdParams, response: ListExplainBacksResponse },
   'usage.summary': { query: UsageQuery, response: UsageSummaryResponse },
+  'overview.get': { params: IdParams, response: OverviewDto },
+  'overview.generate': { params: IdParams, body: GeneratePaperArtifactRequest, response: null },
   'studyPath.get': { params: IdParams, response: StudyPathDto },
-  'studyPath.generate': { params: IdParams, body: GenerateStudyPathRequest, response: null },
+  'studyPath.generate': { params: IdParams, body: GeneratePaperArtifactRequest, response: null },
   'studyPath.check': { params: IdParams, body: CheckStudyPathRequest, response: StudyPathDto },
 } as const satisfies Record<RouteId, RouteSchemas>;
 

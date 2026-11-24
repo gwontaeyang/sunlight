@@ -1,6 +1,6 @@
 import { STUDY_PATH_MAX_CHARS, STUDY_PATH_MAX_CHECKS, type Citation } from './contracts/domain';
-import { pairCitations } from './contracts/grounding';
-import { expandTabs, parseAnswer, splitFences } from './markup/parseAnswer';
+import { sectionCitations } from './markup/sectionCitations';
+import { expandTabs, splitFences } from './markup/parseAnswer';
 
 export { STUDY_PATH_MAX_CHARS, STUDY_PATH_MAX_CHECKS } from './contracts/domain';
 export type StageNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -90,22 +90,5 @@ export function hasStudyExamples(body: string, language: string | undefined): bo
 export function studyPathCitations(text: string, citations: readonly Citation[]): Citation[][] | null {
   const parts = splitStudyPath(text);
   if (!parts.complete) return null;
-  const whole = parseAnswer(text, { final: true });
-  const pairs = pairCitations(whole.citations, citations);
-  if (!pairs) return null;
-  let cursor = 0;
-  const result: Citation[][] = [];
-  for (const stage of parts.stages) {
-    const parsed = parseAnswer(stage.body, { final: true });
-    const local: Citation[] = [];
-    for (const item of parsed.citations) {
-      const source = whole.citations[cursor++];
-      const original = source && pairs.get(source.ordinal);
-      if (!original) return null;
-      local.push({ ...original, ordinal: item.ordinal });
-    }
-    if (!pairCitations(parsed.citations, local)) return null;
-    result.push(local);
-  }
-  return cursor === whole.citations.length ? result : null;
+  return sectionCitations(text, parts.stages.map((s) => s.body), citations);
 }

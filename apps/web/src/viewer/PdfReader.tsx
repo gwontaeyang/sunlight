@@ -11,7 +11,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createPortal } from 'react-dom';
 import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
+import { useSelectionQuestions } from '../review/SelectionQuestions';
 import type { HighlightDto, LastPositionDto, PaperDetailDto, StructureResponse } from '@study-paper/shared/contracts/api';
 import type { NormRect, ReaderActionKind } from '@study-paper/shared/contracts/domain';
 import type { CaptureSize } from '@study-paper/shared/image/capture';
@@ -66,6 +67,7 @@ interface ReaderUi {
   area: PendingArea | null;
   captureBusy: boolean;
   explain(): void;
+  makeQuestions(): void;
   act(kind: SelectionActionKind): void;
   highlight(color: HighlightColorValue | 'last'): void;
   capture(what: 'figure' | 'equation' | 'highlight'): void;
@@ -155,6 +157,10 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
   const setCanGoBack = useReaderStore((s) => s.setCanGoBack);
   const qc = useQueryClient();
   const [location] = useLocation();
+  const sourceHighlight = new URLSearchParams(useSearch()).get('highlight');
+  const jumpedHighlight = useRef<string | null>(null);
+  const questions = useSelectionQuestions(paperId);
+  const openQuestions = questions.open;
   const [notice, setNotice] = useState<string | null>(null);
   // The place to restore: the stored one (papers.get), or the newest one still being saved by a reader of this paper
   // that was just left (its PUT has not settled, so the cached papers.get does not carry it yet — C2-R1-01).
@@ -237,6 +243,21 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
       if (useReaderStore.getState().navigator === nav) registerNavigator(null);
     };
   }, [registerNavigator, getViewer, beforeJump, goBack]);
+
+  // A review card carries the persisted highlight id, including after the reader remounts.
+  useEffect(() => {
+    if (!viewer || !sourceHighlight || jumpedHighlight.current === sourceHighlight || !highlightsQ.data) return;
+    const source = highlightsQ.data.highlights.find(h => h.id === sourceHighlight);
+    if (!source) { setNotice('복습 카드의 원문 위치를 찾지 못했습니다.'); return; }
+    const jump = () => {
+      if (jumpedHighlight.current === sourceHighlight || !viewer.pagesCount) return;
+      jumpedHighlight.current = sourceHighlight;
+      useReaderStore.getState().jumpToAnchor({ kind: source.kind, rects: source.rects, quote: source.quote ?? undefined });
+    };
+    viewer.eventBus.on('pagesinit', jump);
+    jump();
+    return () => viewer.eventBus.off('pagesinit', jump);
+  }, [viewer, sourceHighlight, highlightsQ.data]);
 
   // Position restore / save and the current section — once the pdf.js viewer exists.
   useEffect(() => {
@@ -437,6 +458,16 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
   );
   const doExplain = useCallback(() => doAct('explain'), [doAct]);
 
+  const makeQuestions = useCallback(() => {
+    const { selection, paperState } = useReaderStore.getState();
+    if (!paperState.readable || !selection) return;
+    const { quote, rects, kind } = selection.anchor;
+    const page = rects[0]?.page;
+    if (kind !== 'text' || !quote?.exact.trim() || !page) return;
+    openQuestions({ page, quote, rects });
+    clearSelection();
+  }, [openQuestions, clearSelection]);
+
   const doCapture = useCallback(
     async (what: 'figure' | 'equation' | 'highlight') => {
       const a = areaRef.current;
@@ -474,6 +505,7 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
   const onShortcut = useCallback(
     (a: ReaderShortcutAction) => {
       if (a.kind === 'highlight') doHighlight(a.color);
+      else if (a.kind === 'reviewQuestions') makeQuestions();
       else if (a.kind === 'back') useReaderStore.getState().back();
       else if (a.kind === 'escape') {
         setCardReq(null);
@@ -482,9 +514,9 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
         setExternal(null);
       } else doAct(a.kind);
     },
-    [doAct, doHighlight, clearSelection],
+    [doAct, doHighlight, clearSelection, makeQuestions],
   );
-  useReaderShortcuts(() => ({ path: location, hasSelection: !!useReaderStore.getState().selection, activeElement: document.activeElement }), onShortcut);
+  useReaderShortcuts(() => ({ path: questions.active ? '' : location, hasSelection: !!useReaderStore.getState().selection, activeElement: document.activeElement }), onShortcut);
 
   const ui = useMemo<ReaderUi>(
     () => ({
@@ -493,6 +525,7 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
       area,
       captureBusy,
       explain: doExplain,
+      makeQuestions,
       act: doAct,
       highlight: doHighlight,
       capture: (w) => void doCapture(w),
@@ -505,7 +538,7 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
         remove.mutate(id, { onError: (e) => setNotice(`삭제하지 못했습니다: ${e.message}`) });
       },
     }),
-    [dtos, create.isPending, area, captureBusy, doExplain, doAct, doHighlight, doCapture, patch, remove],
+    [dtos, create.isPending, area, captureBusy, doExplain, doAct, doHighlight, makeQuestions, doCapture, patch, remove],
   );
 
   // Stable props for the vendored highlighter (its listeners re-register when these change).
@@ -590,7 +623,7 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
     <ReaderUiContext.Provider value={ui}>
       <div
         ref={setFrame}
-        className="absolute inset-0"
+        className="absolute inset-0 [container-type:inline-size]"
         onPointerDownCapture={(e) => {
           // Focus carry-over: typing in a panel input left the focus there, so E / H did not fire after selecting
           // text in the PDF. A pointerdown on the PDF releases an editable element outside the viewer.
@@ -620,6 +653,7 @@ function ReaderViewer({ paperId, pdfDocument, initialPosition }: { paperId: stri
         </PdfHighlighter>
         <FloatingCardHost request={cardReq} frame={frameEl} eventBus={viewer?.eventBus ?? null} onClose={() => setCardReq(null)} />
         {barSlot ? createPortal(barControls, barSlot) : <div data-reader-chrome className="absolute top-2 right-3 z-10 flex items-center gap-0.5 rounded-sl-control bg-sl-raised px-1 py-0.5 shadow-sl-card">{barControls}</div>}
+        {questions.dialog}
         {notice && (
           <div data-reader-chrome role="status" data-testid="selection-notice" className="absolute top-3 left-1/2 z-10 max-w-[90%] -translate-x-1/2 rounded-sl-control bg-sl-ink px-3.5 py-1.5 text-sl-ui text-sl-surface shadow-sl-card">
             {notice}
@@ -678,7 +712,7 @@ function SelectionToolbar() {
   return (
     <div
       data-testid="selection-toolbar"
-      className="flex items-center gap-0.5 rounded-[28px] border border-sl-line bg-sl-raised p-1 text-sl-ui shadow-sl-card"
+      className="flex max-w-[calc(100cqw-16px)] flex-wrap items-center gap-0.5 rounded-[28px] border border-sl-line bg-sl-raised p-1 text-sl-ui shadow-sl-card"
       onMouseDown={(e) => e.preventDefault() /* keep the text selection */}
     >
       <button type="button" data-testid="toolbar-explain" className={`${tool} bg-sl-accent-soft text-sl-accent hover:bg-sl-accent-soft`} disabled={!contextReady} title={aiTitle('설명 (E)')} onClick={ui.explain}>
@@ -690,6 +724,9 @@ function SelectionToolbar() {
         <Icon name="translate" size={15} />
         번역
         <kbd className={kbd}>T</kbd>
+      </button>
+      <button type="button" data-testid="rd-make-cards" className={tool} disabled={!readable} title="문제 만들기 (Q)" onClick={ui.makeQuestions}>
+        문제 만들기<kbd className={kbd}>Q</kbd>
       </button>
       {!contextReady && (
         <span className="px-1 text-sl-label text-sl-meta" data-testid="toolbar-context-pending" title={unsupported ?? undefined}>

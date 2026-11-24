@@ -245,7 +245,8 @@ export function ReaderPage({ paperId }: { paperId: string }) {
           </>
         )}
       </main>
-      <SidePanel paperId={paperId} uploaded={pdfOnly} textExcerpts={pdfOnly && p?.contextMode === 'text'} />
+      <SidePanel paperId={paperId} uploaded={pdfOnly} textExcerpts={pdfOnly && p?.contextMode === 'text'}
+        overviewUnavailable={!hasProvider ? '설정에서 AI 사용 방식을 선택하세요.' : !ai?.available ? ai?.text ?? '논문 색인을 확인하고 있습니다.' : undefined} />
     </div>
     </UploadedPaperContext.Provider>
   );

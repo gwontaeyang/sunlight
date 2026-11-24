@@ -500,6 +500,13 @@ export const studyPaths = sqliteTable('study_paths', {
   pendingRegenerate: integer('pendingRegenerate', { mode: 'boolean' }).notNull().default(false),
 });
 
+export const paperOverviews = sqliteTable('paper_overviews', {
+  paperId: text('paperId').primaryKey().references(() => papers.id, { onDelete: 'cascade' }),
+  resultJson: text('resultJson'),
+  pendingRunId: text('pendingRunId'),
+  pendingRegenerate: integer('pendingRegenerate', { mode: 'boolean' }).notNull().default(false),
+});
+
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   valueJson: text('valueJson').notNull(),

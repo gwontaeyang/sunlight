@@ -14,9 +14,9 @@ export type Milestone = 0 | 1 | 2 | 3 | 4;
 export const GATED_MILESTONE: Milestone = 2;
 
 /** A is an implementation checkpoint. Only an accepted product stage advances the checked-in gate. */
-export const STAGES = ['m2', 'a', 'c2', 'study', 'upload', 'ref-find', 'b', 'c1', 'd'] as const;
+export const STAGES = ['m2', 'a', 'c2', 'study', 'upload', 'ref-find', 'overview', 'selection-review', 'b', 'c1', 'd'] as const;
 export type GateStage = (typeof STAGES)[number];
-export const GATED_STAGE: GateStage = 'ref-find';
+export const GATED_STAGE: GateStage = 'selection-review';
 
 export function gateStage(preview: string | undefined, accepted: GateStage = GATED_STAGE): GateStage {
   if (!preview) return accepted;
@@ -64,10 +64,6 @@ export const ROUTE_MANIFEST = [
   { route: 'collections.create', owner: 'A', milestone: 4 },
   { route: 'collections.patch', owner: 'A', milestone: 4 },
   { route: 'collections.delete', owner: 'A', milestone: 4 },
-  { route: 'review.queue', owner: 'A', milestone: 4 },
-  { route: 'review.stats', owner: 'A', milestone: 4 },
-  { route: 'review.grade', owner: 'A', milestone: 4 },
-  { route: 'review.cards.create', owner: 'A', milestone: 4 },
   { route: 'review.cards.patch', owner: 'A', milestone: 4 },
   { route: 'review.cards.delete', owner: 'A', milestone: 4 },
   { route: 'papers.exportMd', owner: 'A', milestone: 4 },
@@ -102,4 +98,11 @@ export const ROUTE_MANIFEST = [
   { route: 'studyPath.check', owner: 'B', milestone: 3, stage: 'study' },
   { route: 'papers.upload', owner: 'A', milestone: 3, stage: 'upload' },
   { route: 'references.find', owner: 'A', milestone: 3, stage: 'ref-find' },
+  { route: 'overview.get', owner: 'B', milestone: 3, stage: 'overview' },
+  { route: 'overview.generate', owner: 'B', milestone: 3, stage: 'overview' },
+  { route: 'review.queue', owner: 'A', milestone: 3, stage: 'selection-review' },
+  { route: 'review.stats', owner: 'A', milestone: 3, stage: 'selection-review' },
+  { route: 'review.grade', owner: 'A', milestone: 3, stage: 'selection-review' },
+  { route: 'review.cards.create', owner: 'A', milestone: 3, stage: 'selection-review' },
+  { route: 'reviewCards.fromSelection', owner: 'B', milestone: 3, stage: 'selection-review' },
 ] as const satisfies readonly RouteManifestEntry[];
