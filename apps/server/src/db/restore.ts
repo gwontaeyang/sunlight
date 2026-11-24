@@ -4,6 +4,8 @@
 // original files back.
 import { copyFileSync, existsSync, mkdirSync, realpathSync, renameSync, rmSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { isWindows } from '../security/platform';
+import { restrictDirToCurrentUser } from '../security/winAcl';
 import { acquireInstanceLock, InstanceLockError } from '../instanceLock';
 import type { DataPaths } from '../paths';
 import { MIGRATIONS_TABLE } from './migrate';
@@ -56,6 +58,7 @@ export function restoreBackup(paths: DataPaths, backupPath: string, now = Date.n
     verifyDatabaseFile(staged); // catches a short or failed copy
     const failedDir = join(paths.backupsDir, `failed.${now}`);
     mkdirSync(failedDir, { recursive: true, mode: 0o700 });
+    if (isWindows()) restrictDirToCurrentUser(failedDir); // POSIX 0700 is meaningless on win32; ACL instead (best-effort)
     const moved: [from: string, to: string][] = [];
     try {
       for (const suffix of ['', '-wal', '-shm']) {

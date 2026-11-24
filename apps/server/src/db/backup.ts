@@ -1,6 +1,8 @@
 // Online backup before migrations (PLAN 6 "Migration과 백업", review B1).
 import { chmodSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { isWindows } from '../security/platform';
+import { restrictDirToCurrentUser } from '../security/winAcl';
 import { openSqlite, type Sqlite } from './client';
 
 export const BACKUP_KEEP = 5;
@@ -29,6 +31,7 @@ function removeTmp(tmpPath: string): void {
  */
 export async function backupDatabase(sqlite: Sqlite, backupsDir: string, tag: string, now = Date.now()): Promise<string> {
   mkdirSync(backupsDir, { recursive: true, mode: 0o700 });
+  if (isWindows()) restrictDirToCurrentUser(backupsDir); // POSIX 0700 is meaningless on win32; ACL instead (best-effort)
   const finalPath = join(backupsDir, `study_paper.${tag}.${now}.sqlite`);
   const tmpPath = `${finalPath}.tmp`;
   try {

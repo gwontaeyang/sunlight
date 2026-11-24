@@ -20,6 +20,7 @@ import { CHILD_KILL_GRACE_MS } from '../lifecycle';
 import type { ContentBlock, LlmAdapter, LlmEvent, LlmHealth, LlmRunRequest } from './adapter';
 import { campaignModel, checkManagedModelSettings, isApprovedFamily } from '../security/m3Campaign';
 import { stopLiveLedger, guardLiveRun, watchLiveRun } from './liveLedger';
+import { resolveClaudeSpawn } from './claudeSpawn';
 
 export const MAX_LINE_CHARS = 16 * 1024 * 1024;
 export const STDERR_KEEP_BYTES = 64 * 1024;
@@ -178,7 +179,9 @@ export class ClaudeCliAdapter implements LlmAdapter {
 
   health(): Promise<LlmHealth> {
     return new Promise((resolve) => {
-      execFile(this.opts.claudeBin, ['--version'], { timeout: 10_000, env: childEnv(this.opts.env ?? process.env) }, (err, stdout) => {
+      // shell on win32: `claude` is resolved via PATHEXT (claude.cmd / claude.exe); `--version` carries no complex
+      // args, so the shell is safe here (unlike a run's argv — see claudeSpawn.ts).
+      execFile(this.opts.claudeBin, ['--version'], { timeout: 10_000, env: childEnv(this.opts.env ?? process.env), shell: process.platform === 'win32' }, (err, stdout) => {
         if (err) {
           const missing = (err as NodeJS.ErrnoException).code === 'ENOENT';
           resolve({ cliFound: !missing, cliVersion: null, loggedIn: null, detail: (missing ? 'claude not found: ' : '') + (err.message.split('\n')[0] ?? 'error') });
@@ -245,8 +248,11 @@ async function* runChild(opts: ClaudeCliOptions, cwd: string | undefined, req: L
 
   let child: ChildProcess;
   try {
+    // How to launch `claude` on this OS (claudeSpawn.ts): a direct executable on POSIX and on win32 when one is found,
+    // else the win32 shell fallback for a .cmd/.bat shim. argv and the scrubbed env are unchanged on both OSes.
+    const plan = resolveClaudeSpawn(opts.claudeBin, buildArgs(req, campaign?.id), { env: opts.env ?? process.env });
     // Live ledger (S, PLAN_M2 D25): the only spawn of a model child, inside the ledger's lock section.
-    const g = guardLiveRun(req.model, { runId: req.runId, task: req.task }, () => spawn(opts.claudeBin, buildArgs(req, campaign?.id), { cwd, env: childEnv(opts.env ?? process.env), stdio: ['pipe', 'pipe', 'pipe'], shell: false }), { expectedCaps: campaign?.caps });
+    const g = guardLiveRun(req.model, { runId: req.runId, task: req.task }, () => spawn(plan.command, plan.args, { cwd, env: childEnv(opts.env ?? process.env), stdio: ['pipe', 'pipe', 'pipe'], shell: plan.shell }), { expectedCaps: campaign?.caps });
     if (!g.ok) {
       yield { type: 'error', code: g.reason === 'ledger_locked' ? 'ledger_locked' : 'budget_exhausted', message: 'live ledger: ' + g.reason, retryable: false, partialText: '' };
       return;

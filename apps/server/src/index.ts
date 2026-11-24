@@ -140,6 +140,8 @@ export async function startServer(userLauncher = false) {
     }
     finish(reports.every((r) => r.ok) ? 0 : 1); // 4.
   };
+  // SIGINT is raised on Ctrl+C on every OS (the documented way to stop on Windows). SIGTERM is POSIX; on win32 the
+  // handler simply never fires (registering it does not throw), so the shutdown path still works through SIGINT.
   process.on('SIGINT', () => void stop('SIGINT'));
   process.on('SIGTERM', () => void stop('SIGTERM'));
 }
@@ -155,4 +157,7 @@ function isMainModule(): boolean {
   }
 }
 
-if (isMainModule()) void startServer();
+if (isMainModule()) {
+  process.env.SP_ENV ??= 'prod'; // `npm start` default (the npm script no longer sets it inline — that is a POSIX shell-ism)
+  void startServer();
+}

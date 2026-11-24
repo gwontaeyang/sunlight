@@ -17,11 +17,17 @@ import { dirname, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { PutSecretRequest } from '@study-paper/shared/contracts/api';
 import { existingRealpath, realDataDirMatcher } from '../security/realDataDir';
+import { isWindows, pathEquals } from '../security/platform';
+import { restrictDirToCurrentUser } from '../security/winAcl';
 
 type Env = Record<string, string | undefined>;
 type Stored = { generation: string; updatedAt: number; key: string | null };
 const unsafe = () => new Error('credential storage is unavailable');
 const missing = (err: unknown) => (err as NodeJS.ErrnoException)?.code === 'ENOENT';
+// O_NOFOLLOW / O_NONBLOCK / O_DIRECTORY do not exist on win32 (undefined → NaN in a bitwise OR); fall back to 0 there.
+// On POSIX they keep their real values, so the open flags are byte-identical to before.
+const O_NOFOLLOW = constants.O_NOFOLLOW ?? 0;
+const O_NONBLOCK = constants.O_NONBLOCK ?? 0;
 
 /** Validate all paths before creating directories or opening a DB. Existing app data stays in place. */
 export function credentialDirectory(env: Env, userLauncher: boolean): string {
@@ -30,7 +36,7 @@ export function credentialDirectory(env: Env, userLauncher: boolean): string {
   const roots = [resolve(data), dirname(resolve(config)), resolve(raw)];
   if (new Set(roots).size !== 3 || new Set(roots.map((dir) => dirname(dir))).size !== 1)
     throw new Error('data, config and secrets must be separate sibling directories');
-  if ([...roots, resolve(config)].some((path) => existingRealpath(path) !== path))
+  if ([...roots, resolve(config)].some((path) => !pathEquals(existingRealpath(path), path)))
     throw new Error('linked application paths are forbidden');
   try {
     const st = lstatSync(resolve(config));
@@ -46,23 +52,31 @@ export class CredentialStore {
   private listeners = new Set<() => void>();
   constructor(readonly dir: string) {}
   private ensureDir() {
-    if (existingRealpath(this.dir) !== this.dir) throw unsafe();
+    if (!pathEquals(existingRealpath(this.dir), this.dir)) throw unsafe();
     mkdirSync(this.dir, { recursive: true, mode: 0o700 });
     const st = lstatSync(this.dir);
-    if (!st.isDirectory() || st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o700) throw unsafe();
+    if (!st.isDirectory()) throw unsafe();
+    if (isWindows()) {
+      // POSIX uid/mode are meaningless on win32: harden the directory with an ACL (best-effort, non-fatal) and
+      // otherwise rely on the %APPDATA% user-profile protection.
+      restrictDirToCurrentUser(this.dir);
+      return;
+    }
+    if (st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o700) throw unsafe();
   }
   read(): Stored | null {
     this.ensureDir();
     let fd: number;
     try {
-      fd = openSync(join(this.dir, 'anthropic.json'), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+      fd = openSync(join(this.dir, 'anthropic.json'), constants.O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
     } catch (e) {
       if (missing(e)) return null;
       throw unsafe();
     }
     try {
       const st = fstatSync(fd);
-      if (!st.isFile() || st.size > 2048 || st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o600 || st.nlink !== 1)
+      // win32: no POSIX uid/mode, but the single-hard-link and size checks still hold, and O_NOFOLLOW is unavailable.
+      if (!st.isFile() || st.size > 2048 || st.nlink !== 1 || (!isWindows() && (st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o600)))
         throw unsafe();
       const v = JSON.parse(readFileSync(fd, 'utf8')) as Stored;
       if (
@@ -87,7 +101,7 @@ export class CredentialStore {
     this.read(); // Validate any existing destination before replacing it.
     const target = join(this.dir, 'anthropic.json');
     const tmp = join(this.dir, '.anthropic-' + process.pid + '-' + randomUUID() + '.tmp');
-    const fd = openSync(tmp, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
+    const fd = openSync(tmp, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | O_NOFOLLOW, 0o600);
     try {
       try {
         writeFileSync(fd, JSON.stringify({ key, generation: randomUUID(), updatedAt: Date.now() }));
@@ -97,11 +111,15 @@ export class CredentialStore {
       }
       renameSync(tmp, target);
       for (const listener of this.listeners) listener();
-      const directory = openSync(this.dir, constants.O_RDONLY | constants.O_DIRECTORY);
-      try {
-        fsyncSync(directory);
-      } finally {
-        closeSync(directory);
+      // Directory fsync for durability of the rename (POSIX only): win32 cannot open a directory as a file descriptor
+      // and has no O_DIRECTORY, so this step is skipped there (the rename itself is still atomic via MoveFileEx).
+      if (!isWindows()) {
+        const directory = openSync(this.dir, constants.O_RDONLY | constants.O_DIRECTORY);
+        try {
+          fsyncSync(directory);
+        } finally {
+          closeSync(directory);
+        }
       }
     } finally {
       if (existsSync(tmp)) rmSync(tmp);
@@ -121,7 +139,8 @@ export class CredentialStore {
       }
       const path = join(this.dir, name);
       const st = lstatSync(path);
-      if (!st.isFile() || st.nlink !== 1 || st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o600) throw unsafe();
+      // win32: no POSIX uid/mode; the single-hard-link and regular-file checks still hold.
+      if (!st.isFile() || st.nlink !== 1 || (!isWindows() && (st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o600))) throw unsafe();
       rmSync(path);
     }
   }

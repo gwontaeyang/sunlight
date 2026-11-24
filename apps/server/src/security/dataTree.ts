@@ -8,8 +8,16 @@
 // itself and a crash left behind — the instance lock, a published file's .part — stays inside and is no copy).
 //
 // The walk never follows a link: readdir with file types, lstat only for regular files (their link count).
+//
+// Windows (win32): a junction, a symbolic link and (per libuv) most other reparse points are reported by lstat /
+// readdir-with-types as isSymbolicLink() === true, so the symlink branch below already refuses them. node's `join`
+// is win32's on Windows, so it walks the real tree with the OS's own separators. A reparse point that Windows does
+// NOT surface as a link is handled by the win32 guard in visit(): an entry that is neither a regular file, a
+// directory nor a symbolic link is reported (as a link) rather than silently skipped, so the tree is never trusted
+// on the strength of a type we could not classify.
 import { lstatSync, readdirSync, statSync, Stats, type Dirent } from 'node:fs';
 import { join } from 'node:path';
+import { isWindows } from './platform';
 
 /**
  * The managed tree of a data directory: every entry the app or its tools create, open or write (dataPaths; fixtures/ is
@@ -49,6 +57,10 @@ export function findTreeLink(root: string, entries?: readonly string[]): TreeLin
         if (seen) seen.inTree++;
         else shared.set(key, { rel, links: st.nlink, inTree: 1 });
       }
+    } else if (isWindows()) {
+      // win32: an entry that is not a file, directory or symbolic link is an unclassifiable reparse point / special
+      // file — refuse it rather than walk past it silently (the task's "report rather than silently pass").
+      return { kind: 'symlink', rel };
     }
     return null;
   };

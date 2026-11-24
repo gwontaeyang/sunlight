@@ -32,6 +32,32 @@ Open the library and paste in an arXiv ID, or drop a local PDF (up to 50 MiB) be
 
 If the default port is busy, run `SP_PORT=4595 npm run start:user -- --user-data` and open the alternate address. [Open port 4595](http://127.0.0.1:4595/)
 
+### Windows (native)
+
+Native Windows support is new — **community testing is welcome, and it is not yet broadly verified on Windows.** If something misbehaves, the Linux steps also work inside WSL (below).
+
+You need **[Node.js 22 LTS](https://nodejs.org)** (the Windows `.msi` installer) and, to clone the repository, **[Git for Windows](https://git-scm.com/download/win)** — or download the repository as a ZIP and extract it. Then, in **PowerShell**, from the folder you cloned or extracted:
+
+```powershell
+.\start.ps1
+```
+
+That installs, builds and starts the app. If PowerShell says running scripts is disabled, start it once with `powershell -ExecutionPolicy Bypass -File .\start.ps1`. Open the `http://127.0.0.1:…` address it prints (paste it into your browser); press **Ctrl+C** in the window to stop.
+
+Or do the steps yourself:
+
+```powershell
+npm ci
+npm run build
+npm run start:user -- --user-data
+```
+
+Your papers, notes and settings live in `%APPDATA%\Sunlight` (next to it, `study_paper-config\` and `study_paper-secrets\`). The database engine (better-sqlite3) ships a prebuilt binary for 64-bit Windows, so no compiler is needed for a normal install. Only if `npm ci` reports it cannot load the SQLite native module (an unusual Node or CPU-architecture combination) install the **[Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/)** with the “Desktop development with C++” workload and run `npm ci` again.
+
+### Windows (WSL)
+
+The Linux instructions above work unchanged inside **WSL** (Windows Subsystem for Linux): install Node 22 in your WSL distribution and run `./start.sh`. Open the printed `http://127.0.0.1:…` address in your Windows browser.
+
 ## Read a paper
 
 For a local PDF, Sunlight takes the title from its metadata or filename. You can edit it in the library. Bookmarks become the table of contents. If the PDF has no bookmarks, Sunlight looks for headings in the text layout. An image-only scan may have no outline or selectable text.
@@ -56,7 +82,7 @@ Save a monthly USD cap before the first API question. The form suggests $20. Set
 
 ## Data and privacy
 
-The server listens only on this computer. PDFs, notes, and the SQLite database stay in `${XDG_DATA_HOME:-~/.local/share}/study_paper/`. Next to it are `study_paper-config/` for optional settings and `study_paper-secrets/` for the key. The key file is readable only by your OS account (0600), inside a private directory (0700). Study-data backups exclude it.
+The server listens only on this computer. PDFs, notes, and the SQLite database stay in `${XDG_DATA_HOME:-~/.local/share}/study_paper/` (on Windows, `%APPDATA%\Sunlight`). Next to it are `study_paper-config/` for optional settings and `study_paper-secrets/` for the key. On Linux and macOS the key file is readable only by your OS account (0600), inside a private directory (0700). On Windows those POSIX modes do not apply: the data lives under your per-user `%APPDATA%` profile, and the app additionally tries to restrict the folders to your account with an ACL (best-effort). Study-data backups exclude the key.
 
 Importing by ID contacts arXiv. Dropping a PDF into the library stays local. When you ask for AI help, your chosen provider receives what the task needs. That can include your question, the paper or its text, and an image you selected.
 

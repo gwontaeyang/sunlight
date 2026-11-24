@@ -3,13 +3,23 @@
 // Keep it free of side effects and of imports other than node:fs / node:path / node:os.
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, win32 } from 'node:path';
 
 type Env = Record<string, string | undefined>;
 
-/** SP_DATA_DIR, else ${XDG_DATA_HOME:-~/.local/share}/study_paper (PLAN 2.1). */
+/**
+ * SP_DATA_DIR, else the per-OS default (PLAN 2.1):
+ *  - Linux/macOS: ${XDG_DATA_HOME:-~/.local/share}/study_paper (unchanged);
+ *  - Windows (win32): %APPDATA%\Sunlight (fallback %LOCALAPPDATA%, then the home directory).
+ * The Windows folder uses the shown app name (Sunlight) because that is where a Windows user expects per-user app
+ * data; the package / repository name stays study_paper. win32 joins keep this correct under a mocked platform.
+ */
 export function resolveDataDir(env: Env = process.env): string {
   if (env.SP_DATA_DIR) return resolve(env.SP_DATA_DIR);
+  if (process.platform === 'win32') {
+    const base = env.APPDATA || env.LOCALAPPDATA || homedir();
+    return win32.join(base, 'Sunlight');
+  }
   const xdg = env.XDG_DATA_HOME || join(homedir(), '.local', 'share');
   return join(xdg, 'study_paper');
 }

@@ -3,6 +3,10 @@ import { dirname, join } from 'node:path';
 import { startServer } from '../apps/server/src/index';
 import { configFilePath, resolveDataDir } from '../apps/server/src/security/runtimePaths';
 
+// The npm script runs `tsx scripts/start-user.ts` with no inline env (a `SP_ENV=prod` prefix is a POSIX shell-ism that
+// breaks native Windows). prod is the default here and in loadConfig, so this is equivalent on every OS.
+process.env.SP_ENV ??= 'prod';
+
 if (process.argv.length !== 3 || process.argv[2] !== '--user-data') throw new Error('start:user requires --user-data');
 const supplied = ['SP_DATA_DIR', 'SP_CONFIG_PATH', 'SP_SECRETS_DIR'].some((k) => process.env[k] !== undefined);
 if (!supplied) {

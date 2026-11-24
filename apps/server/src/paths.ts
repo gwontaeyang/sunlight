@@ -1,6 +1,9 @@
-// App data layout (PLAN 2.1). The data dir and its sub-directories are 0700.
+// App data layout (PLAN 2.1). The data dir and its sub-directories are 0700 on POSIX; on win32 the root is restricted
+// with an ACL (best-effort) and its children inherit it.
 import { chmodSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { isWindows } from './security/platform';
+import { restrictDirToCurrentUser } from './security/winAcl';
 
 export interface DataPaths {
   root: string;
@@ -61,8 +64,13 @@ export function dataPaths(root: string): DataPaths {
 }
 
 export function ensureDataDirs(p: DataPaths): void {
+  // win32: restrict the root first (with (OI)(CI) inheritance) so the sub-directories created next inherit the ACL.
+  if (isWindows()) {
+    if (!existsSync(p.root)) mkdirSync(p.root, { recursive: true });
+    restrictDirToCurrentUser(p.root);
+  }
   for (const dir of [p.root, p.dbDir, p.backupsDir, p.papersDir, p.tmpDir, p.claudeCwd, p.runDir]) {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
-  chmodSync(p.root, 0o700);
+  chmodSync(p.root, 0o700); // POSIX: 0700; win32: keeps the root writable, no effect on the ACL set above
 }

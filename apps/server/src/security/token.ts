@@ -40,7 +40,8 @@ export function writeRuntimeTokenFile(port: number, token: string, env: Record<s
     if (st.isDirectory()) throw new Error(`token path ${file} is a directory`);
     unlinkSync(file);
   }
-  const fd = openSync(file, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
+  // O_NOFOLLOW does not exist on win32 (undefined → NaN in the OR); fall back to 0 there, identical on POSIX.
+  const fd = openSync(file, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | (constants.O_NOFOLLOW ?? 0), 0o600);
   try {
     writeSync(fd, token);
   } finally {
