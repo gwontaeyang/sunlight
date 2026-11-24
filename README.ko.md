@@ -64,33 +64,42 @@ npm run start:user -- --user-data
 
 ### 문장 선택해서 묻기
 
-[![선택한 문장과 근거가 표시된 설명 — 각 문장이 어디서 왔는지 라벨이 붙고, 검증된 인용이 PDF의 해당 줄로 이어짐](docs/screenshots/ai-grounded.png)](docs/screenshots/ai-grounded.png)
+| Light | Dark |
+| --- | --- |
+| [![선택한 문장과 근거가 표시된 설명 — 각 문장이 어디서 왔는지 라벨이 붙고, 검증된 인용이 PDF의 해당 줄로 이어짐](docs/screenshots/ai-grounded.png)](docs/screenshots/ai-grounded.png) | [![선택한 문장과 근거가 표시된 설명 — 각 문장이 어디서 왔는지 라벨이 붙고, 검증된 인용이 PDF의 해당 줄로 이어짐 (다크)](docs/screenshots/ai-grounded-dark.png)](docs/screenshots/ai-grounded-dark.png) |
 
 문장을 드래그하고 **E**(설명), **T**(번역), **C**(직접 질문)를 누르세요. 그림의 일부만 묻고 싶으면 **Ctrl**을 누른 채 그 부분을 드래그합니다(Dark 테마에서도 원래 색으로 돌려볼 수 있습니다). 답변의 각 문장에는 출처 라벨(논문 근거 / 일반 지식)이 붙고, **원문에서 찾음** 인용을 누르면 PDF의 그 줄로 이동합니다. PDF 옆에서 낯선 기호는 표기 카드로, 다음 식의 전제는 가정 카드로 찾고, 식 번호로 이동하거나, 용어를 용어집에 저장하거나, 문장을 하이라이트하고 **N**으로 노트를 남길 수 있습니다.
 
 ### 논문 한눈에 요약
 
-[![한 화면 논문 요약: 문제·동기, 핵심 방법, 주요 결과, 한계, 기여에 각각 출처 라벨](docs/screenshots/overview.png)](docs/screenshots/overview.png)
+| Light | Dark |
+| --- | --- |
+| [![한 화면 논문 요약: 문제·동기, 핵심 방법, 주요 결과, 한계, 기여에 각각 출처 라벨](docs/screenshots/overview.png)](docs/screenshots/overview.png) | [![한 화면 논문 요약: 문제·동기, 핵심 방법, 주요 결과, 한계, 기여에 각각 출처 라벨 (다크)](docs/screenshots/overview-dark.png)](docs/screenshots/overview-dark.png) |
 
 AI 패널에서 **논문 한눈에 요약 → 요약 만들기**를 누르면 한 화면 요약이 나옵니다. 문제·동기, 핵심 방법, 주요 결과(논문이 보고한 수치 포함), 한계, 기여를 각각 한 단락으로 읽습니다. 각 항목에는 출처 라벨이 붙고, 논문에 없는 내용은 지어내지 않고 표시합니다. 페이지를 떠나도 계속 생성되고, **다시 만들기**로 교체합니다.
 
 ### 선택에서 복습문제로
 
-[![복습문제 미리보기: 선택한 글에서 만든 질문들, 각 질문에 선택한 글이 근거로 표시됨](docs/screenshots/review-questions.png)](docs/screenshots/review-questions.png)
+| Light | Dark |
+| --- | --- |
+| [![복습문제 미리보기: 선택한 글에서 만든 질문들, 각 질문에 선택한 글이 근거로 표시됨](docs/screenshots/review-questions.png)](docs/screenshots/review-questions.png) | [![복습문제 미리보기: 선택한 글에서 만든 질문들, 각 질문에 선택한 글이 근거로 표시됨 (다크)](docs/screenshots/review-questions-dark.png)](docs/screenshots/review-questions-dark.png) |
 
 문장을 선택하고 **Q**(또는 **문제 만들기**)를 누르면 그 글에서 복습문제를 만듭니다. 각 문제에는 만들어진 **선택 근거**가 그대로 표시됩니다 — 문구는 반드시 선택한 글에서 나와야 합니다. 원하는 문제만 골라 복습 큐에 넣고, 서재의 **복습**에서 나중에 풉니다. **원문 보기**로 하이라이트된 원문으로 돌아갑니다.
 
 ### 직접 구현해 보기
 
-| 단계별 공부 자료 | 실행 가능한 예시 |
+| Light | Dark |
 | --- | --- |
-| [![기존 방법에서 논문의 변경·식으로 이어지는 단계별 공부 자료](docs/screenshots/study-path.png)](docs/screenshots/study-path.png) | [![단계별 공부가 생성한 C++17·Eigen 예시 코드](docs/screenshots/study-implementation.png)](docs/screenshots/study-implementation.png) |
+| [![기존 방법에서 논문의 변경·식으로 이어지는 단계별 공부 자료](docs/screenshots/study-path.png)](docs/screenshots/study-path.png) | [![기존 방법에서 논문의 변경·식으로 이어지는 단계별 공부 자료 (다크)](docs/screenshots/study-path-dark.png)](docs/screenshots/study-path-dark.png) |
+| [![단계별 공부가 생성한 C++17·Eigen 예시 코드](docs/screenshots/study-implementation.png)](docs/screenshots/study-implementation.png) | [![단계별 공부가 생성한 C++17·Eigen 예시 코드 (다크)](docs/screenshots/study-implementation-dark.png)](docs/screenshots/study-implementation-dark.png) |
 
 리더에서 **공부 → 공부 자료 만들기**를 누르세요. 기존 방법과 그 한계에서 논문이 바꾼 부분, 식, 작은 실행 예제까지 이어 줍니다. 직접 해 본 항목에 체크하면 다시 열 때도 그 자리에 남습니다. 설정에서 다음 자료의 예시 언어를 C++17·Eigen 또는 Python으로 고를 수 있습니다.
 
 ### 참고문헌 찾아보기
 
-[![ID 없는 참고문헌을 arXiv·Crossref에서 찾는 참고문헌 패널](docs/screenshots/references.png)](docs/screenshots/references.png)
+| Light | Dark |
+| --- | --- |
+| [![ID 없는 참고문헌을 arXiv·Crossref에서 찾는 참고문헌 패널](docs/screenshots/references.png)](docs/screenshots/references.png) | [![ID 없는 참고문헌을 arXiv·Crossref에서 찾는 참고문헌 패널 (다크)](docs/screenshots/references-dark.png)](docs/screenshots/references-dark.png) |
 
 **참고문헌** 패널에서 ID가 없는 참고문헌에는 **찾아보기** 버튼이 생깁니다. 제목으로 arXiv와 Crossref를 검색해, arXiv 논문은 서재로 바로 가져오고, DOI를 열거나, 공개된 PDF를 받을 수 있습니다. DOI만 있을 때는 그 사실을 솔직히 알려 줍니다.
 
@@ -98,7 +107,9 @@ AI 패널에서 **논문 한눈에 요약 → 요약 만들기**를 누르면 �
 
 서재나 리더에서 **설정**을 열어 Sunlight가 Claude에 연결하는 방식을 고르세요. 이 컴퓨터의 `claude` CLI에 이미 로그인했다면 **Claude Code 구독**을 고르면 됩니다. 자기 키로 쓰려면 아래 세 단계를 따르세요.
 
-[![AI 설정 화면에 표시된 세 단계: API key 방식 선택, 키 저장, 월 상한 설정](docs/screenshots/ai-settings-steps.png)](docs/screenshots/ai-settings-steps.png)
+| Light | Dark |
+| --- | --- |
+| [![AI 설정 화면에 표시된 세 단계: API key 방식 선택, 키 저장, 월 상한 설정](docs/screenshots/ai-settings-steps.png)](docs/screenshots/ai-settings-steps.png) | [![AI 설정 화면에 표시된 세 단계: API key 방식 선택, 키 저장, 월 상한 설정 (다크)](docs/screenshots/ai-settings-steps-dark.png)](docs/screenshots/ai-settings-steps-dark.png) |
 
 1. **방식 선택.** **AI 사용 방식**에서 **내 Anthropic API key**를 고릅니다.
 2. **키 저장.** `sk-ant-api03-…` 키를 칸에 붙여 넣고 **키 저장**을 누릅니다. 키는 이 컴퓨터에만 저장되고, 화면에 **등록됨 · ••••••••**로 표시됩니다. **키 확인**은 답변을 생성하지 않고 모델 접근만 확인하며, **키 삭제**로 지울 수 있습니다.
