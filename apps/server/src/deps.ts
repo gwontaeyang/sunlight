@@ -33,7 +33,7 @@ export type RouteModule = (deps: AppDeps) => RouteHandlers;
 
 export class HttpError extends Error {
   constructor(
-    readonly status: 400 | 404 | 409 | 413 | 415,
+    readonly status: 400 | 404 | 409 | 413 | 415 | 503,
     readonly code: Parameters<typeof errorDto>[0],
     message: string,
     readonly details?: unknown,

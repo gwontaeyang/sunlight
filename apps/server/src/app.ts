@@ -16,6 +16,7 @@ import { notesRoutes } from './routes/notes';
 import { paperCardsRoutes } from './routes/paperCards';
 import { papersRoutes } from './routes/papers';
 import { progressRoutes } from './routes/progress';
+import { referencesRoutes } from './routes/references';
 import { reviewRoutes } from './routes/review';
 import { reviewGenerateRoutes } from './routes/reviewGenerate';
 import { settingsRoutes } from './routes/settings';
@@ -36,6 +37,7 @@ export const ROUTE_MODULES: Record<string, RouteModule> = {
   highlights: highlightsRoutes,
   notes: notesRoutes,
   progress: progressRoutes,
+  references: referencesRoutes,
   review: reviewRoutes,
   export: exportRoutes,
   settings: settingsRoutes,

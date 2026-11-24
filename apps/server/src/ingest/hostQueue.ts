@@ -29,7 +29,11 @@ export interface QueueGroup {
 export const MAX_TIMER_MS = 2_147_483_647;
 
 const ARXIV_GROUP: QueueGroup = { name: 'arxiv', concurrency: 1, minGapMs: ARXIV_MIN_GAP_MS };
-const HOST_GROUPS: Record<string, QueueGroup> = { 'arxiv.org': ARXIV_GROUP, 'export.arxiv.org': ARXIV_GROUP };
+const HOST_GROUPS: Record<string, QueueGroup> = {
+  'arxiv.org': ARXIV_GROUP,
+  'export.arxiv.org': ARXIV_GROUP,
+  'api.crossref.org': { name: 'crossref', concurrency: 1, minGapMs: 1_000 },
+};
 
 export function groupForHost(host: string): QueueGroup {
   const g = HOST_GROUPS[host.toLowerCase()];

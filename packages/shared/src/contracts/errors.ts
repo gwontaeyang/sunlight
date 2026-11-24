@@ -12,6 +12,7 @@ export const ApiErrorCode = z.enum([
   'unsupported_media_type', // 415 body with a Content-Type other than application/json (upload: application/pdf)
   'internal', // 500
   'not_implemented', // 501 route registered but not implemented yet
+  'reference_search_unavailable', // 503 reference metadata search disabled or temporarily unavailable
 ]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCode>;
 
@@ -26,6 +27,7 @@ export const API_ERROR_STATUS: Record<ApiErrorCode, number> = {
   unsupported_media_type: 415,
   internal: 500,
   not_implemented: 501,
+  reference_search_unavailable: 503,
 };
 
 export const ErrorDtoSchema = z.object({

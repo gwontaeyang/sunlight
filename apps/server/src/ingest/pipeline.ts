@@ -35,7 +35,7 @@ import { existsSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs'
 import { join } from 'node:path';
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { z } from 'zod';
-import type { ImportPaperResponse, JobDto as JobDtoSchema } from '@study-paper/shared/contracts/api';
+import type { ImportPaperResponse, JobDto as JobDtoSchema, ReferenceSearchRequest } from '@study-paper/shared/contracts/api';
 import type { IngestWarningCode, JobErrorCode, JobKind, JobStepName, JobStepStatus, NormRect, PaperReadiness } from '@study-paper/shared/contracts/domain';
 import type { JobSseEvent } from '@study-paper/shared/contracts/sse';
 import { files, jobs, pageTexts, papers } from '../db/schema';
@@ -53,6 +53,7 @@ import { HttpCache } from './httpCache';
 import { prepareStoredEquations } from './katexCheck';
 import { arxivMentions, parseStructure, type ParsedStructure, type MentionList, versionVerdict } from './latexml';
 import { extractPageTexts, PDFJS_VERSION, type ExtractOptions } from './pdfText';
+import { findReferences } from './referenceSearch';
 import { BYTE_LIMITS, type FetchImpl } from './safeFetch';
 import { commitImportStructure, commitUpgradeStructure, mergeWarnings, publishSupplementV2, buildSupplementInput, StructureCommitError, type StoredLatex } from './structureStore';
 import { structureUpgradeState } from './structureUpgradeState';
@@ -260,6 +261,10 @@ export class IngestService {
     const offlineDir = this.opts.offlineDir !== undefined ? this.opts.offlineDir : (process.env.SP_ARXIV_OFFLINE_DIR ?? null);
     if (offlineDir && this.deps.config.env !== 'prod') return new OfflineArxivSource(offlineDir);
     return new NetworkArxivSource({ queue: this.queue, cache: new HttpCache(this.deps.sqlite, this.now), fetchImpl: this.opts.fetchImpl, retry: { now: this.now, ...this.opts.arxivRetry } });
+  }
+
+  findReferences(query: ReferenceSearchRequest, signal: AbortSignal) {
+    return findReferences(query, { queue: this.queue, fetchImpl: this.opts.fetchImpl, signal });
   }
 
   activeJobs(): number {

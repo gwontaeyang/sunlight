@@ -38,6 +38,7 @@ export const ROUTES = [
   { id: 'notes.delete', method: 'DELETE', path: '/notes/:id', response: 'empty' },
   { id: 'progress.list', method: 'GET', path: '/papers/:id/progress', response: 'json' },
   { id: 'progress.put', method: 'PUT', path: '/papers/:id/progress/:sectionId', response: 'json' },
+  { id: 'references.find', method: 'POST', path: '/references/find', response: 'json' },
   { id: 'papers.upload', method: 'POST', path: '/papers/upload', response: 'json' },
   { id: 'collections.list', method: 'GET', path: '/collections', response: 'json' },
   { id: 'collections.create', method: 'POST', path: '/collections', response: 'json' },

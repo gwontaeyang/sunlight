@@ -273,6 +273,33 @@ export const EquationDto = z.object({
   pdfRect: NormRectSchema.nullable(),
 });
 export const FigureDto = z.object({ id: IdSchema, sectionId: NullableString, htmlId: NullableString, kind: z.string(), number: NullableString, caption: z.string(), pdfPage: PageNumberSchema.nullable() });
+const ReferenceProvider = z.enum(['arxiv', 'crossref']);
+const ReferenceYear = z.number().int().min(1000).max(9999);
+const ReferenceLink = z.url({ protocol: /^https$/ }).max(4096);
+export const ReferenceSearchRequest = z.strictObject({
+  title: z.string().trim().min(1).max(512),
+  authors: z.array(z.string().trim().min(1).max(256)).max(12).optional(),
+  year: ReferenceYear.optional(),
+});
+export const ReferenceCandidate = z.object({
+  source: ReferenceProvider,
+  title: z.string().min(1).max(2048),
+  authors: z.array(z.string().min(1).max(512)).max(50),
+  year: ReferenceYear.nullable(),
+  arxivId: z.string().min(1).max(128).nullable(),
+  doi: z.string().min(1).max(2048).nullable(),
+  pdfUrl: ReferenceLink.nullable(),
+  absUrl: ReferenceLink.nullable(),
+  score: z.number().min(0).max(1),
+  inLibraryPaperId: IdSchema.nullable(),
+}).refine((r) => r.source === 'arxiv' ? !!r.arxivId : !!r.doi, {
+  message: 'a candidate needs its provider identifier',
+});
+export const ReferenceSearchResponse = z.object({
+  candidates: z.array(ReferenceCandidate).max(5),
+  unavailable: z.array(ReferenceProvider).max(2),
+});
+
 export const ReferenceDto = z.object({
   id: IdSchema,
   ordinal: z.number().int(),
@@ -625,6 +652,7 @@ export const API_SCHEMAS = {
   'progress.put': { params: ProgressParams, body: PutProgressRequest, response: ProgressDto },
   // Raw application/pdf body (no JSON body schema); the file name travels in the X-SP-Filename header.
   'papers.upload': { response: UploadPaperResponse },
+  'references.find': { body: ReferenceSearchRequest, response: ReferenceSearchResponse },
   'collections.list': { response: ListCollectionsResponse },
   'collections.create': { body: CreateCollectionRequest, response: CollectionDto },
   'collections.patch': { params: IdParams, body: PatchCollectionRequest, response: CollectionDto },
@@ -687,6 +715,9 @@ export type StructureUpgradeDto = z.infer<typeof StructureUpgradeDto>;
 export type SectionDto = z.infer<typeof SectionDto>;
 export type EquationDto = z.infer<typeof EquationDto>;
 export type FigureDto = z.infer<typeof FigureDto>;
+export type ReferenceSearchRequest = z.infer<typeof ReferenceSearchRequest>;
+export type ReferenceCandidate = z.infer<typeof ReferenceCandidate>;
+export type ReferenceSearchResponse = z.infer<typeof ReferenceSearchResponse>;
 export type ReferenceDto = z.infer<typeof ReferenceDto>;
 export type CardItemDto = z.infer<typeof CardItemDto>;
 export type ListThreadsResponse = z.infer<typeof ListThreadsResponse>;

@@ -44,6 +44,7 @@ const APPENDIX_A: Record<string, [owner: 'A' | 'B' | 'supervisor', milestone: 0 
   'GET /papers/:id/progress': ['A', 2],
   'PUT /papers/:id/progress/:sectionId': ['A', 2],
   'POST /papers/upload': ['A', 3],
+  'POST /references/find': ['A', 3],
   'GET /collections': ['A', 4],
   'POST /collections': ['A', 4],
   'PATCH /collections/:id': ['A', 4],

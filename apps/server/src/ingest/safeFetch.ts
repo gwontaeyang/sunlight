@@ -13,6 +13,12 @@ import { assertNetworkAllowed, guardedFetch, NetworkDisabledError } from '../sec
 import { HostQueue, QueueAbortedError, type RunOptions } from './hostQueue';
 
 export const ALLOWED_HOSTS: ReadonlySet<string> = new Set(['arxiv.org', 'export.arxiv.org']);
+// Search uses fixed metadata endpoints. Its Crossref permission does not apply to paper downloads.
+export const REFERENCE_ENDPOINTS = {
+  arxiv: 'https://export.arxiv.org/api/query',
+  crossref: 'https://api.crossref.org/works',
+} as const;
+export type ReferenceProvider = keyof typeof REFERENCE_ENDPOINTS;
 export const MAX_REDIRECTS = 3;
 export const HEADER_TIMEOUT_MS = 20_000;
 export const TOTAL_TIMEOUT_MS = 120_000;
@@ -56,6 +62,8 @@ export type FetchImpl = (input: string, init: RequestInit) => Promise<Response>;
 export interface SafeFetchOptions {
   kind: FetchKind;
   queue: HostQueue;
+  /** Restricts this call to one metadata endpoint, without redirect hops. */
+  referenceProvider?: ReferenceProvider;
   fetchImpl?: FetchImpl;
   /** Caller cancellation (shutdown, paper deleted). */
   signal?: AbortSignal;
@@ -84,7 +92,7 @@ export interface FetchMeta {
 }
 
 /** Throws FetchError('blocked_url') unless the URL is https + allow-listed host + default port + no userinfo. */
-export function checkUrl(raw: string): URL {
+export function checkUrl(raw: string, referenceProvider?: ReferenceProvider): URL {
   let u: URL;
   try {
     u = new URL(raw);
@@ -94,6 +102,11 @@ export function checkUrl(raw: string): URL {
   if (u.protocol !== 'https:') throw new FetchError('blocked_url', `only https is allowed (${u.protocol})`);
   if (u.username !== '' || u.password !== '') throw new FetchError('blocked_url', 'URLs with userinfo are not allowed');
   if (u.port !== '') throw new FetchError('blocked_url', `only the default port is allowed (${u.port})`);
+  if (referenceProvider) {
+    if (u.origin + u.pathname !== REFERENCE_ENDPOINTS[referenceProvider])
+      throw new FetchError('blocked_url', 'unexpected reference search endpoint');
+    return u;
+  }
   if (!ALLOWED_HOSTS.has(u.hostname.toLowerCase())) throw new FetchError('blocked_url', `host ${u.hostname} is not allowed`);
   return u;
 }
@@ -175,12 +188,14 @@ export async function safeFetch<T>(url: string, opts: SafeFetchOptions, consume:
         headers: { 'User-Agent': USER_AGENT, Accept: opts.accept ?? '*/*' },
       });
     } catch (e) {
+      if (e instanceof NetworkDisabledError && opts.referenceProvider) throw e;
       throw abortCause ?? toFetchError(e);
     } finally {
       clearTimeout(headerTimer);
     }
     if (REDIRECT.has(response.status)) {
       await response.body?.cancel().catch(() => {});
+      if (opts.referenceProvider) throw new FetchError('redirect', 'reference search does not follow redirects');
       const loc = response.headers.get('location');
       if (!loc) throw new FetchError('redirect', `redirect ${response.status} without Location`);
       let next: URL;
@@ -212,7 +227,7 @@ export async function safeFetch<T>(url: string, opts: SafeFetchOptions, consume:
   };
 
   try {
-    let current = checkUrl(url);
+    let current = checkUrl(url, opts.referenceProvider);
     for (let hop = 0; ; hop++) {
       const target = current;
       const res = await opts.queue

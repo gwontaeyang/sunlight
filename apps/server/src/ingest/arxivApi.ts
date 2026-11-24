@@ -195,11 +195,7 @@ interface XmlEl {
 const kids = (el: XmlEl, tag: string): XmlEl[] => Array.from(el.children).filter((c) => c.tagName.toLowerCase() === tag);
 const kid = (el: XmlEl, tag: string): XmlEl | undefined => kids(el, tag)[0];
 
-/**
- * Parses an arXiv API Atom feed and returns the entry for `id` (and `version` when given).
- * No entry → IngestError('not_found'); an `<entry>` that is the API's error report → 'not_found' too.
- */
-export function parseArxivAtom(xml: string, id: string, version?: number): ArxivMetadata {
+export function parseAtomEntries(xml: string): XmlEl[] {
   let doc: { documentElement: XmlEl | null; getElementsByTagName(t: string): ArrayLike<XmlEl> };
   try {
     doc = new DOMParser().parseFromString(xml, 'text/xml') as never;
@@ -208,7 +204,15 @@ export function parseArxivAtom(xml: string, id: string, version?: number): Arxiv
   }
   const root = doc.documentElement;
   if (!root || root.tagName.toLowerCase() !== 'feed') throw new IngestError('invalid_metadata', 'arXiv API response is not an Atom feed');
-  const entries = kids(root, 'entry');
+  return kids(root, 'entry');
+}
+
+/**
+ * Parses an arXiv API Atom feed and returns the entry for `id` (and `version` when given).
+ * No entry → IngestError('not_found'); an `<entry>` that is the API's error report → 'not_found' too.
+ */
+export function parseArxivAtom(xml: string, id: string, version?: number): ArxivMetadata {
+  const entries = parseAtomEntries(xml);
   for (const entry of entries) {
     const absId = squash(kid(entry, 'id')?.textContent);
     if (/\/api\/errors/.test(absId)) {
